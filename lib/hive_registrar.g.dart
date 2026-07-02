@@ -4,15 +4,24 @@
 
 import 'package:hive_ce/hive_ce.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/account_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/event_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/vault_v1.dart';
 
 extension HiveRegistrar on HiveInterface {
   void registerAdapters() {
     registerAdapter(AccountV1Adapter());
+    registerAdapter(ChainV1Adapter());
+    registerAdapter(EventV1Adapter());
+    registerAdapter(VaultV1Adapter());
   }
 }
 
 extension IsolatedHiveRegistrar on IsolatedHiveInterface {
   void registerAdapters() {
     registerAdapter(AccountV1Adapter());
+    registerAdapter(ChainV1Adapter());
+    registerAdapter(EventV1Adapter());
+    registerAdapter(VaultV1Adapter());
   }
 }

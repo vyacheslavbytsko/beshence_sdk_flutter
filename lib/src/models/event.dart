@@ -1,0 +1,4 @@
+class BeshenceEvent {
+
+  BeshenceEvent();
+}
