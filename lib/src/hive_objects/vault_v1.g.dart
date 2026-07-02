@@ -8,7 +8,7 @@ part of 'vault_v1.dart';
 
 class VaultV1Adapter extends TypeAdapter<VaultV1> {
   @override
-  final typeId = 1;
+  final typeId = 27463;
 
   @override
   VaultV1 read(BinaryReader reader) {

@@ -8,7 +8,7 @@ part of 'chain_v1.dart';
 
 class ChainV1Adapter extends TypeAdapter<ChainV1> {
   @override
-  final typeId = 2;
+  final typeId = 27464;
 
   @override
   ChainV1 read(BinaryReader reader) {

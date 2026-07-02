@@ -2,7 +2,7 @@ import 'package:hive_ce/hive.dart';
 
 part 'vault_v1.g.dart';
 
-@HiveType(typeId: 1)
+@HiveType(typeId: 27463)
 class VaultV1 extends HiveObject {
   @HiveField(0)
   final String id;

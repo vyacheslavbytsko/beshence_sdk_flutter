@@ -2,7 +2,7 @@ import 'package:hive_ce/hive.dart';
 
 part 'account_v1.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 27462)
 class AccountV1 extends HiveObject {
   @HiveField(0)
   final String id;
