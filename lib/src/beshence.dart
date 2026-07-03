@@ -78,7 +78,7 @@ class Beshence {
   static BeshenceAccount? get selectedAccount {
     if(!initialized) throw Exception("Beshence not initialized");
     final id = settingsBox.get('selectedAccountId');
-    return id == null ? accounts.first : getAccount(id);
+    return id != null ? getAccount(id) : (accounts.isNotEmpty ? accounts.first : null);
   }
 
   static void setSelectedAccount(BeshenceAccount account) async {
