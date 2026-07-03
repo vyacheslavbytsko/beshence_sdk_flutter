@@ -22,8 +22,8 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       parentId: fields[2] as String?,
       sessionId: fields[3] as String?,
       payload: fields[4] as String,
-      locallyCreatedAt: fields[5] as DateTime,
-      createdAt: fields[6] as DateTime,
+      createdAt: fields[5] as DateTime,
+      serverCreatedAt: fields[6] as DateTime,
     );
   }
 
@@ -42,9 +42,9 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       ..writeByte(4)
       ..write(obj.payload)
       ..writeByte(5)
-      ..write(obj.locallyCreatedAt)
+      ..write(obj.createdAt)
       ..writeByte(6)
-      ..write(obj.createdAt);
+      ..write(obj.serverCreatedAt);
   }
 
   @override

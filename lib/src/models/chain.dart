@@ -1,8 +1,13 @@
-import 'package:beshence_sdk_flutter/src/models/vault.dart';
+import '../../beshence_sdk_flutter.dart';
+import 'event.dart';
 
 class BeshenceChain {
   final String name;
-  final BeshenceVault vault;
+  final BeshenceAccount account;
 
-  BeshenceChain({required this.name, required this.vault});
+  BeshenceChain({required this.name, required this.account});
+
+  Future<void> addEvent(BeshenceEvent event) async {
+
+  }
 }

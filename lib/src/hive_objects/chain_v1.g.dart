@@ -16,17 +16,23 @@ class ChainV1Adapter extends TypeAdapter<ChainV1> {
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ChainV1(name: fields[0] as String, vaultId: fields[1] as String);
+    return ChainV1(
+      name: fields[0] as String,
+      accountId: fields[1] as String,
+      headId: fields[2] as String?,
+    );
   }
 
   @override
   void write(BinaryWriter writer, ChainV1 obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
-      ..write(obj.vaultId);
+      ..write(obj.accountId)
+      ..writeByte(2)
+      ..write(obj.headId);
   }
 
   @override

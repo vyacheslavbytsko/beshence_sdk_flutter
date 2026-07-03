@@ -15,9 +15,9 @@ class EventV1 extends HiveObject {
   @HiveField(4)
   final String payload;
   @HiveField(5)
-  final DateTime locallyCreatedAt;
-  @HiveField(6)
   final DateTime createdAt;
+  @HiveField(6)
+  final DateTime serverCreatedAt;
 
   EventV1({
     required this.id,
@@ -25,7 +25,7 @@ class EventV1 extends HiveObject {
     this.parentId,
     this.sessionId,
     required this.payload,
-    required this.locallyCreatedAt,
-    required this.createdAt
+    required this.createdAt,
+    required this.serverCreatedAt
   });
 }

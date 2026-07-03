@@ -1,7 +1,10 @@
 import 'dart:convert' as convert;
 
+import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
+import 'package:beshence_sdk_flutter/src/models/chain.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:http/http.dart' as http;
+import 'package:uuid/uuid.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/vault_v1.dart';
@@ -11,6 +14,31 @@ class BeshenceAccount {
   final String id;
 
   BeshenceAccount({required this.id});
+
+  Future<BeshenceChain> createChain(String name) async {
+    await Beshence.init();
+
+    final Box<ChainV1> box = await getChainsV1Box();
+    final ChainV1 newChain = ChainV1(
+      name: name,
+      accountId: id,
+      headId: null
+    );
+    await box.put(newChain.name, newChain);
+    return BeshenceChain(name: newChain.name, account: this);
+  }
+
+  Future<List<BeshenceChain>> get chains async {
+    await Beshence.init();
+
+    final Box<ChainV1> box = await getChainsV1Box();
+    final List<BeshenceChain> boxChains = box.values
+        .where((chain) => chain.accountId == id)
+        .map((chain) => BeshenceChain(name: chain.name, account: this))
+        .toList();
+
+    return boxChains;
+  }
 
   /*Future<void> addVault({required String address, BeshenceVaultLoginPayload? loginPayload}) async {
     var url = Uri.parse('$address/.well-known/beshence/bank');
@@ -44,7 +72,7 @@ class BeshenceAccount {
     final Box<VaultV1> box = await getVaultsV1Box();
     final List<BeshenceVault> boxVaults = box.values
         .where((vault) => vault.accountId == id)
-        .map((vault) => BeshenceVault(id: vault.id))
+        .map((vault) => BeshenceVault(id: vault.id, account: this))
         .toList();
 
     return boxVaults;

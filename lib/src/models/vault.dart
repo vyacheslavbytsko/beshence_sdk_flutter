@@ -6,17 +6,9 @@ import '../misc.dart';
 
 class BeshenceVault {
   final String id;
+  final BeshenceAccount account;
 
-  BeshenceVault({required this.id});
-
-  Future<BeshenceAccount> get account async {
-    await Beshence.init();
-    final Box<VaultV1> box = await getVaultsV1Box();
-    final VaultV1? boxVault = box.get(id);
-    if (boxVault == null) throw StateError('Vault not found');
-    final String accountId = boxVault.accountId;
-    return BeshenceAccount(id: accountId);
-  }
+  BeshenceVault({required this.id, required this.account});
 }
 
 class BeshenceVaultTokenPair {
