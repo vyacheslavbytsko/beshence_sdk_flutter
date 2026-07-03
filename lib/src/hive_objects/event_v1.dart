@@ -7,25 +7,22 @@ class EventV1 extends HiveObject {
   @HiveField(0)
   final String id;
   @HiveField(1)
-  final String chainId;
+  final String chainName;
   @HiveField(2)
-  final String? parentId;
+  final String name;
   @HiveField(3)
-  final String? sessionId;
+  final String? parentId;
   @HiveField(4)
-  final String payload;
+  final String? sessionId;
   @HiveField(5)
-  final DateTime createdAt;
-  @HiveField(6)
-  final DateTime serverCreatedAt;
+  final String payload;
 
   EventV1({
     required this.id,
-    required this.chainId,
+    required this.chainName,
+    required this.name,
     this.parentId,
     this.sessionId,
-    required this.payload,
-    required this.createdAt,
-    required this.serverCreatedAt
+    required this.payload
   });
 }

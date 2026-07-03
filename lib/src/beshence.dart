@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../hive_registrar.g.dart';
 import 'hive_objects/account_v1.dart';
 import 'hive_objects/chain_v1.dart';
+import 'hive_objects/event_v1.dart';
 import 'hive_objects/vault_v1.dart';
 import 'misc.dart';
 
@@ -17,15 +18,14 @@ class Beshence {
     Hive.registerAdapters();
 
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    appId = packageInfo.packageName;
+    var appId = packageInfo.packageName;
 
     String prefix = "beshence_$appId";
     settingsBox = await Hive.openBox('${prefix}_settings');
     accountsV1Box = await Hive.openBox<AccountV1>('${prefix}_accounts_v1');
     vaultsV1Box = await Hive.openBox<VaultV1>('${prefix}_vaults_v1');
     chainsV1Box = await Hive.openBox<ChainV1>('${prefix}_chains_v1');
-
-    //prefs = await SharedPreferences.getInstance();
+    eventsV1Box = await Hive.openBox<EventV1>('${prefix}_events_v1');
 
     initialized = true;
   }
