@@ -19,7 +19,7 @@ class ChainV1Adapter extends TypeAdapter<ChainV1> {
     return ChainV1(
       name: fields[0] as String,
       accountId: fields[1] as String,
-      headId: fields[2] as String?,
+      lastEventId: fields[2] as String?,
     );
   }
 
@@ -32,7 +32,7 @@ class ChainV1Adapter extends TypeAdapter<ChainV1> {
       ..writeByte(1)
       ..write(obj.accountId)
       ..writeByte(2)
-      ..write(obj.headId);
+      ..write(obj.lastEventId);
   }
 
   @override

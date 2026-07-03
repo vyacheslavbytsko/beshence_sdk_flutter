@@ -9,7 +9,7 @@ class ChainV1 extends HiveObject {
   @HiveField(1)
   final String accountId;
   @HiveField(2)
-  final String? headId;
+  final String? lastEventId;
 
-  ChainV1({required this.name, required this.accountId, this.headId});
+  ChainV1({required this.name, required this.accountId, this.lastEventId});
 }

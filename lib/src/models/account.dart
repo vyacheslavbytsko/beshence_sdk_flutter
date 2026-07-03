@@ -22,7 +22,7 @@ class BeshenceAccount {
     final ChainV1 newChain = ChainV1(
       name: name,
       accountId: id,
-      headId: null
+      lastEventId: null
     );
     await box.put(newChain.name, newChain);
     return BeshenceChain(name: newChain.name, account: this);
@@ -54,7 +54,7 @@ class BeshenceAccount {
         if (jsonResponse['ping'] == 'beshence-pong!') {
           // this is an actual beshence bank
           print('YAAS');
-
+          // TODO add vault using $accountId_$vaultId
         } else {
           throw StateError('Unexpected ping response');
         }
