@@ -75,6 +75,7 @@ class Beshence {
     await init();
     final id = prefs.getString('selectedAccountId');
     return id == null ? null : getAccount(id);
+    // TODO: if id is null and we have accounts then selected is first in list of accounts; remove this logic from notes
   }
 
   static Future<void> setSelectedAccount(BeshenceAccount account) async {

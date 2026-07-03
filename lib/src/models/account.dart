@@ -19,6 +19,9 @@ class BeshenceAccount {
     await Beshence.init();
 
     final Box<ChainV1> box = await getChainsV1Box();
+    if (box.containsKey(name)) {
+      throw Exception('Chain with name $name already exists for this account');
+    }
     final ChainV1 newChain = ChainV1(
       name: name,
       accountId: id,
@@ -26,6 +29,20 @@ class BeshenceAccount {
     );
     await box.put(newChain.name, newChain);
     return BeshenceChain(name: newChain.name, account: this);
+  }
+
+  Future<BeshenceChain?> getChain(String name) async {
+    await Beshence.init();
+
+    final Box<ChainV1> box = await getChainsV1Box();
+    final ChainV1? chainV1 = box.get(name);
+    return chainV1 != null ? BeshenceChain(name: chainV1.name, account: this) : null;
+  }
+
+  Future<BeshenceChain> requireChain(String name) async {
+    await Beshence.init();
+    final BeshenceChain? chain = await getChain(name);
+    return chain ?? await createChain(name);
   }
 
   Future<List<BeshenceChain>> get chains async {
