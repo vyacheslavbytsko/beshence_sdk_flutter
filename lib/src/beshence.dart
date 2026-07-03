@@ -1,59 +1,64 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../hive_registrar.g.dart';
 import 'hive_objects/account_v1.dart';
+import 'hive_objects/chain_v1.dart';
+import 'hive_objects/vault_v1.dart';
 import 'misc.dart';
 
 class Beshence {
-  static bool _initialized = false;
-
   static Future<void> init() async {
-    if (_initialized) return;
+    if (initialized) return;
+
     await Hive.initFlutter();
     Hive.registerAdapters();
+
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     appId = packageInfo.packageName;
-    prefs = await SharedPreferences.getInstance();
-    _initialized = true;
+
+    String prefix = "beshence_$appId";
+    settingsBox = await Hive.openBox('${prefix}_settings');
+    accountsV1Box = await Hive.openBox<AccountV1>('${prefix}_accounts_v1');
+    vaultsV1Box = await Hive.openBox<VaultV1>('${prefix}_vaults_v1');
+    chainsV1Box = await Hive.openBox<ChainV1>('${prefix}_chains_v1');
+
+    //prefs = await SharedPreferences.getInstance();
+
+    initialized = true;
   }
 
-  static Future<List<BeshenceAccount>> getAccounts() async {
-    await init();
+  static List<BeshenceAccount> get accounts {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<AccountV1> box = await getAccountsV1Box();
-    List<AccountV1> boxAccounts = box.values.toList();
+    List<AccountV1> boxAccounts = accountsV1Box.values.toList();
 
     return [for (var account in boxAccounts) BeshenceAccount(id: account.id)];
   }
 
-  static Future<BeshenceAccount?> getAccount(String id) async {
-    await init();
+  static BeshenceAccount? getAccount(String id) {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<AccountV1> box = await getAccountsV1Box();
-    final AccountV1? boxAccount = box.get(id);
+    final AccountV1? boxAccount = accountsV1Box.get(id);
     if (boxAccount == null) return null;
 
     return BeshenceAccount(id: boxAccount.id);
   }
 
   static Future<BeshenceAccount> createAccount() async {
-    await init();
-
-    final Box<AccountV1> box = await getAccountsV1Box();
+    if(!initialized) throw Exception("Beshence not initialized");
 
     String id;
     do {
       id = Uuid().v4();
-    } while (box.containsKey(id));
+    } while (accountsV1Box.containsKey(id));
 
     final account = AccountV1(id: id);
-    await box.put(id, account);
+    await accountsV1Box.put(id, account);
 
-    if (!box.containsKey(id)) {
+    if (!accountsV1Box.containsKey(id)) {
       throw StateError('Couldn\'t save account');
     }
 
@@ -61,30 +66,28 @@ class Beshence {
   }
 
   static Future<bool> removeAccount(BeshenceAccount account) async {
-    await init();
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<AccountV1> box = await getAccountsV1Box();
-    final AccountV1? boxAccount = box.get(account.id);
+    final AccountV1? boxAccount = accountsV1Box.get(account.id);
     if (boxAccount == null) return false;
 
-    await box.delete(boxAccount.id);
-    return !box.containsKey(account.id);
+    await accountsV1Box.delete(boxAccount.id);
+    return !accountsV1Box.containsKey(account.id);
   }
 
-  static Future<BeshenceAccount?> get selectedAccount async {
-    await init();
-    final id = prefs.getString('selectedAccountId');
-    return id == null ? null : getAccount(id);
-    // TODO: if id is null and we have accounts then selected is first in list of accounts; remove this logic from notes
+  static BeshenceAccount? get selectedAccount {
+    if(!initialized) throw Exception("Beshence not initialized");
+    final id = settingsBox.get('selectedAccountId');
+    return id == null ? accounts.first : getAccount(id);
   }
 
-  static Future<void> setSelectedAccount(BeshenceAccount account) async {
-    await init();
-    await prefs.setString('selectedAccountId', account.id);
+  static void setSelectedAccount(BeshenceAccount account) async {
+    if(!initialized) throw Exception("Beshence not initialized");
+    await settingsBox.put('selectedAccountId', account.id);
   }
 
   static Future<void> removeSelectedAccount() async {
-    await init();
-    await prefs.remove('selectedAccountId');
+    if(!initialized) throw Exception("Beshence not initialized");
+    await settingsBox.delete('selectedAccountId');
   }
 }

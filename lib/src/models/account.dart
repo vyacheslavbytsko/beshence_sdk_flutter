@@ -16,10 +16,9 @@ class BeshenceAccount {
   BeshenceAccount({required this.id});
 
   Future<BeshenceChain> createChain(String name) async {
-    await Beshence.init();
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<ChainV1> box = await getChainsV1Box();
-    if (box.containsKey(name)) {
+    if (chainsV1Box.containsKey(name)) {
       throw Exception('Chain with name $name already exists for this account');
     }
     final ChainV1 newChain = ChainV1(
@@ -27,29 +26,27 @@ class BeshenceAccount {
       accountId: id,
       lastEventId: null
     );
-    await box.put(newChain.name, newChain);
+    await chainsV1Box.put(newChain.name, newChain);
     return BeshenceChain(name: newChain.name, account: this);
   }
 
-  Future<BeshenceChain?> getChain(String name) async {
-    await Beshence.init();
+  BeshenceChain? getChain(String name) {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<ChainV1> box = await getChainsV1Box();
-    final ChainV1? chainV1 = box.get(name);
+    final ChainV1? chainV1 = chainsV1Box.get(name);
     return chainV1 != null ? BeshenceChain(name: chainV1.name, account: this) : null;
   }
 
   Future<BeshenceChain> requireChain(String name) async {
-    await Beshence.init();
-    final BeshenceChain? chain = await getChain(name);
+    if(!initialized) throw Exception("Beshence not initialized");
+    final BeshenceChain? chain = getChain(name);
     return chain ?? await createChain(name);
   }
 
-  Future<List<BeshenceChain>> get chains async {
-    await Beshence.init();
+  List<BeshenceChain> get chains {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<ChainV1> box = await getChainsV1Box();
-    final List<BeshenceChain> boxChains = box.values
+    final List<BeshenceChain> boxChains = chainsV1Box.values
         .where((chain) => chain.accountId == id)
         .map((chain) => BeshenceChain(name: chain.name, account: this))
         .toList();
