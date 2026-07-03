@@ -1,5 +1,4 @@
 import '../../beshence_sdk_flutter.dart';
-import 'event.dart';
 
 class BeshenceChain {
   final String name;

@@ -21,19 +21,22 @@ class BeshenceAccount {
     if (chainsV1Box.containsKey(name)) {
       throw Exception('Chain with name $name already exists for this account');
     }
+
+    // TODO: check name
+
     final ChainV1 newChain = ChainV1(
       name: name,
       accountId: id,
       lastEventId: null
     );
-    await chainsV1Box.put(newChain.name, newChain);
+    await chainsV1Box.put("${id}_$name", newChain);
     return BeshenceChain(name: newChain.name, account: this);
   }
 
   BeshenceChain? getChain(String name) {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final ChainV1? chainV1 = chainsV1Box.get(name);
+    final ChainV1? chainV1 = chainsV1Box.get("${id}_$name");
     return chainV1 != null ? BeshenceChain(name: chainV1.name, account: this) : null;
   }
 
