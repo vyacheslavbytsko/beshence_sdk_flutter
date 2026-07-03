@@ -15,6 +15,16 @@ class BeshenceAccount {
 
   BeshenceAccount({required this.id});
 
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BeshenceAccount &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
+
   Future<BeshenceChain> createChain(String name) async {
     if(!initialized) throw Exception("Beshence not initialized");
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'account.dart';
 
 enum DaemonState { stopped, starting, running, stopping }
@@ -9,10 +10,11 @@ class BeshenceDaemon {
   DaemonState _state = DaemonState.stopped;
   Future<void>? _startFuture;
   Future<void>? _stopFuture;
-  
+  Timer? _loopTimer;
+
   BeshenceDaemon._({required this.account});
   
-  factory BeshenceDaemon.of({required BeshenceAccount account}) {
+  factory BeshenceDaemon.of(BeshenceAccount account) {
     if (_daemons.containsKey(account)) {
       return _daemons[account]!;
     } else {
@@ -48,8 +50,20 @@ class BeshenceDaemon {
 
   Future<void> _doStartDaemon() async {
     print('[BeshenceDaemon][account:${account.id}] Starting Beshence Daemon...');
-    await Future.delayed(Duration(milliseconds: 10));
+    _startPrintLoop();
     print('[BeshenceDaemon][account:${account.id}] Beshence Daemon started successfully.');
+  }
+
+  void _startPrintLoop() {
+    _loopTimer = Timer.periodic(Duration(seconds: 1), (_) {
+      if (_state != DaemonState.running) return;
+      print('1');
+    });
+  }
+
+  void _stopPrintLoop() {
+    _loopTimer?.cancel();
+    _loopTimer = null;
   }
 
   Future<void> stopDaemon() async {
@@ -76,8 +90,11 @@ class BeshenceDaemon {
     }
   }
 
+  Future<void> stopDemon() => stopDaemon();
+
   Future<void> _doStopDaemon() async {
     print('[BeshenceDaemon][account:${account.id}] Stopping Beshence Daemon...');
+    _stopPrintLoop();
     await Future.delayed(Duration(milliseconds: 10));
     print('[BeshenceDaemon][account:${account.id}] Beshence Daemon stopped.');
   }
