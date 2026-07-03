@@ -16,6 +16,8 @@ class EventV1 extends HiveObject {
   final String? sessionId;
   @HiveField(5)
   final String payload;
+  @HiveField(6)
+  final bool applied;
 
   EventV1({
     required this.id,
@@ -23,6 +25,7 @@ class EventV1 extends HiveObject {
     required this.name,
     this.parentId,
     this.sessionId,
-    required this.payload
+    required this.payload,
+    required this.applied
   });
 }

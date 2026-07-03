@@ -23,13 +23,14 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       parentId: fields[3] as String?,
       sessionId: fields[4] as String?,
       payload: fields[5] as String,
+      applied: fields[6] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, EventV1 obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       ..writeByte(4)
       ..write(obj.sessionId)
       ..writeByte(5)
-      ..write(obj.payload);
+      ..write(obj.payload)
+      ..writeByte(6)
+      ..write(obj.applied);
   }
 
   @override

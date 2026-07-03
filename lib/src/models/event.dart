@@ -1,14 +1,17 @@
 import 'chain.dart';
 
 abstract class BeshenceEvent<T extends BeshenceEvent<T>> {
-  final String id;
-  final BeshenceChain chain;
+  late final String _id;
+  late final BeshenceChain _chain;
   final String name;
-  final bool applied;
+  late final bool _applied;
 
-  BeshenceEvent({required this.id, required this.chain, required this.name, required this.applied});
+  BeshenceEvent({required this.name});
 
   T fromJson(Map<String, dynamic> json);
-
   Map<String, dynamic> toJson();
+
+  String get id => _id;
+  BeshenceChain get chain => _chain;
+  bool get applied => _applied;
 }
