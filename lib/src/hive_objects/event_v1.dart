@@ -12,8 +12,6 @@ class EventV1 extends HiveObject {
   final String name;
   @HiveField(3)
   final String? parentId;
-  @HiveField(4)
-  final String? sessionId;
   @HiveField(5)
   final String payload;
   @HiveField(6)
@@ -24,7 +22,6 @@ class EventV1 extends HiveObject {
     required this.chainName,
     required this.name,
     this.parentId,
-    this.sessionId,
     required this.payload,
     required this.applied
   });
