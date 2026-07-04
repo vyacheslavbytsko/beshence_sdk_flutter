@@ -29,10 +29,49 @@ String encodeKey({
   _appendUuid(builder, accountId);
   _appendUuid(builder, bankId);
   _appendUuid(builder, vaultId);
-  _appendUuid(builder, chainName);
+  _appendString(builder, chainName);
   _appendUuid(builder, eventId);
 
   return base64UrlEncode(builder.takeBytes());
+}
+
+void _appendString(BytesBuilder builder, String? value) {
+  if (value == null) return;
+
+  final length = value.length;
+
+  if (length > 65535) {
+    throw ArgumentError.value(
+      value,
+      'value',
+      'Max length is 65535 characters',
+    );
+  }
+
+  // 2 байта длины (big-endian)
+  builder.addByte((length >> 8) & 0xFF);
+  builder.addByte(length & 0xFF);
+
+  for (var i = 0; i < length; i++) {
+    final c = value.codeUnitAt(i);
+
+    final isValid =
+        (c >= 48 && c <= 57) ||  // 0-9
+            (c >= 65 && c <= 90) ||  // A-Z
+            (c >= 97 && c <= 122) || // a-z
+            c == 95 ||               // _
+            c == 45;                 // -
+
+    if (!isValid) {
+      throw ArgumentError.value(
+        value,
+        'value',
+        'Invalid character in string',
+      );
+    }
+
+    builder.addByte(c);
+  }
 }
 
 void _appendUuid(BytesBuilder builder, String? uuidString) {
