@@ -32,7 +32,7 @@ abstract class BeshenceEvent<T extends BeshenceEvent<T>> {
 abstract class BeshenceEvent {
   late final String _id;
 
-  String get id => _id;
+  String get eventId => _id;
 }
 
 abstract class BeshenceEventMapper<T extends BeshenceEvent> {

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../beshence_sdk_flutter.dart';
@@ -17,16 +18,25 @@ class BeshenceChain {
 
     final mapper = eventsRegistry.mapperForType(event.runtimeType);
 
-    var eventBase64 = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
-    var eventV1 = EventV1(
+    var payload = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
+    var boxEvent = EventV1(
       id: Uuid().v4(),
         chainName: name,
         name: mapper.name,
-        parentId: (await lastEvent)?.id,
-        payload: eventBase64,
+        parentId: lastEvent?.eventId,
+        payload: payload,
         applied: applied
     );
-    await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: eventV1.id), eventV1);
+    await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: boxEvent.id), boxEvent);
+
+    final boxChainKey = encodeKey(accountId: account.id, chainName: name);
+    final boxChain = chainsV1Box.get(boxChainKey)!;
+    final newBoxChain = ChainV1(
+        name: boxChain.name,
+        accountId: boxChain.accountId,
+      lastEventId: boxEvent.id
+    );
+    await chainsV1Box.put(boxChainKey, newBoxChain);
   }
 
   BeshenceEvent getEvent(String eventId) {
