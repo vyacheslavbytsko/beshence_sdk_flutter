@@ -29,7 +29,7 @@ class BeshenceChain {
     await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: eventV1.id), eventV1);
   }
 
-  Future<BeshenceEvent> getEvent(String eventId) async {
+  BeshenceEvent getEvent(String eventId) {
     if(!initialized) throw Exception("Beshence not initialized");
     EventV1 boxEvent = eventsV1Box.get(encodeKey(accountId: account.id, chainName: name, eventId: eventId))!;
 
@@ -40,9 +40,9 @@ class BeshenceChain {
     return event;
   }
 
-  Future<BeshenceEvent?> get lastEvent async {
+  BeshenceEvent? get lastEvent {
     if(!initialized) throw Exception("Beshence not initialized");
     var eventId = chainsV1Box.get(encodeKey(accountId: account.id, chainName: name))?.lastEventId;
-    return eventId == null ? null : await getEvent(eventId);
+    return eventId == null ? null : getEvent(eventId);
   }
 }
