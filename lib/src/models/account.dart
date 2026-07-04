@@ -42,7 +42,9 @@ class BeshenceAccount {
     if(!initialized) throw Exception("Beshence not initialized");
 
     final ChainV1? chainV1 = chainsV1Box.get(encodeKey(accountId: id, chainName: name));
-    return chainV1 != null ? BeshenceChain(name: chainV1.name, account: this) : null;
+    return chainV1 == null ? null : BeshenceChain(
+        name: chainV1.name,
+        account: this);
   }
 
   Future<BeshenceChain> requireChain(String name) async {

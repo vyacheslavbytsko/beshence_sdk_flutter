@@ -1,4 +1,5 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
+import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/init_account.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -12,7 +13,7 @@ import 'hive_objects/vault_v1.dart';
 import 'misc.dart';
 
 class Beshence {
-  static Future<void> init() async {
+  static Future<void> init(BeshenceEventRegistry registry) async {
     if (initialized) return;
 
     await Hive.initFlutter();
@@ -27,6 +28,10 @@ class Beshence {
     vaultsV1Box = await Hive.openBox<VaultV1>('${prefix}_vaults_v1');
     chainsV1Box = await Hive.openBox<ChainV1>('${prefix}_chains_v1');
     eventsV1Box = await Hive.openBox<EventV1>('${prefix}_events_v1');
+
+    eventsRegistry = registry;
+    eventsRegistry.register<InitAccountEvent>(InitAccountEventMapper());
+    eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventMapper());
 
     initialized = true;
   }

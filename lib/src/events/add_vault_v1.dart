@@ -1,37 +1,40 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
-class AddVaultV1Event extends BeshenceEvent<AddVaultV1Event> {
+class AddVaultV1Event extends BeshenceEvent {
   final String address;
   final String vaultId;
   final String bankId;
   final DateTime addedAt;
 
   AddVaultV1Event({
-    super.name="add_vault_v1",
     required this.address,
     required this.vaultId,
     required this.bankId,
     required this.addedAt
   });
+}
+
+class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
+  @override
+  String get name => "add_vault_v1";
 
   @override
   AddVaultV1Event fromJson(Map<String, dynamic> json) {
     return AddVaultV1Event(
         address: json['address'],
-        vaultId: json['vaultId'],
-        bankId: json['bankId'],
-        addedAt: DateTime.parse(json["addedAt"])
+        vaultId: json['vault_id'],
+        bankId: json['bank_id'],
+        addedAt: DateTime.parse(json["added_at"])
     );
   }
 
   @override
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson(AddVaultV1Event event) {
     return {
-      "address": address,
-      "vaultId": vaultId,
-      "bankId": bankId,
-      "addedAt": addedAt.toIso8601String()
+      "address": event.address,
+      "vault_id": event.vaultId,
+      "bank_id": event.bankId,
+      "added_at": event.addedAt.toIso8601String()
     };
   }
-
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 
 import 'hive_objects/account_v1.dart';
@@ -8,6 +9,7 @@ import 'hive_objects/chain_v1.dart';
 import 'hive_objects/event_v1.dart';
 import 'hive_objects/vault_v1.dart';
 
+late final BeshenceEventRegistry eventsRegistry;
 bool initialized = false;
 late final Box settingsBox;
 late final Box<AccountV1> accountsV1Box;

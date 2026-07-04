@@ -1,9 +1,14 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
-class InitAccountEvent extends BeshenceEvent<InitAccountEvent> {
+class InitAccountEvent extends BeshenceEvent {
   final String accountId;
 
-  InitAccountEvent({super.name="init_account", required this.accountId});
+  InitAccountEvent({required this.accountId});
+}
+
+class InitAccountEventMapper implements BeshenceEventMapper<InitAccountEvent> {
+  @override
+  String get name => "init_account";
 
   @override
   InitAccountEvent fromJson(Map<String, dynamic> json) {
@@ -11,10 +16,9 @@ class InitAccountEvent extends BeshenceEvent<InitAccountEvent> {
   }
 
   @override
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson(InitAccountEvent event) {
     return {
-      "id": accountId
+      "id": event.accountId
     };
   }
-
 }
