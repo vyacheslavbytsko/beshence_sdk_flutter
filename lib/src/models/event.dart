@@ -1,7 +1,5 @@
 abstract class BeshenceEvent {
-  late final String _id;
-
-  String get eventId => _id;
+  String? eventId;
 }
 
 abstract class BeshenceEventMapper<T extends BeshenceEvent> {

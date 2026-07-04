@@ -46,6 +46,7 @@ class BeshenceChain {
     final json = jsonDecode(utf8.decode(base64Url.decode(boxEvent.payload)));
     final mapper = eventsRegistry.mapperForName(boxEvent.name);
     final event = mapper.fromJson(json);
+    event.eventId = boxEvent.id;
 
     return event;
   }
