@@ -23,7 +23,7 @@ class BeshenceAccount {
   Future<BeshenceChain> createChain(String name) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    if (chainsV1Box.containsKey(name)) {
+    if (chainsV1Box.containsKey(encodeKey(accountId: id, chainName: name))) {
       throw Exception('Chain with name $name already exists for this account');
     }
 
@@ -34,14 +34,14 @@ class BeshenceAccount {
       accountId: id,
       lastEventId: null
     );
-    await chainsV1Box.put("${id}_$name", newChain);
+    await chainsV1Box.put(encodeKey(accountId: id, chainName: name), newChain);
     return BeshenceChain(name: newChain.name, account: this);
   }
 
   BeshenceChain? getChain(String name) {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final ChainV1? chainV1 = chainsV1Box.get("${id}_$name");
+    final ChainV1? chainV1 = chainsV1Box.get(encodeKey(accountId: id, chainName: name));
     return chainV1 != null ? BeshenceChain(name: chainV1.name, account: this) : null;
   }
 
@@ -81,7 +81,7 @@ class BeshenceAccount {
       refreshToken: refreshToken,
       accessToken: accessToken
     );
-    await vaultsV1Box.put("${id}_$vaultId", newVault);
+    await vaultsV1Box.put(encodeKey(accountId: id, vaultId: vaultId), newVault);
   }
 
   List<BeshenceVault> get vaults {

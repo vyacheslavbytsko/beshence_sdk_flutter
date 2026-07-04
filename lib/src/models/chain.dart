@@ -19,6 +19,6 @@ class BeshenceChain {
     var eventV1 = EventV1(
       id: Uuid().v4(), chainName: name, name: event.name, payload: eventBase64, applied: applied
     );
-    await eventsV1Box.put("${account.id}_${name}_${eventV1.id}", eventV1);
+    await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: eventV1.id), eventV1);
   }
 }

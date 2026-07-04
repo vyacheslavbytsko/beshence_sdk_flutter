@@ -42,7 +42,7 @@ class Beshence {
   static BeshenceAccount? getAccount(String id) {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final AccountV1? boxAccount = accountsV1Box.get(id);
+    final AccountV1? boxAccount = accountsV1Box.get(encodeKey(accountId: id));
     if (boxAccount == null) return null;
 
     return BeshenceAccount(id: boxAccount.id);
@@ -54,12 +54,12 @@ class Beshence {
     String id;
     do {
       id = Uuid().v4();
-    } while (accountsV1Box.containsKey(id));
+    } while (accountsV1Box.containsKey(encodeKey(accountId: id)));
 
     final boxAccount = AccountV1(id: id);
-    await accountsV1Box.put(id, boxAccount);
+    await accountsV1Box.put(encodeKey(accountId: id), boxAccount);
 
-    if (!accountsV1Box.containsKey(id)) {
+    if (!accountsV1Box.containsKey(encodeKey(accountId: id))) {
       throw StateError('Couldn\'t save account');
     }
 
@@ -73,11 +73,11 @@ class Beshence {
   static Future<bool> removeAccount(BeshenceAccount account) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final AccountV1? boxAccount = accountsV1Box.get(account.id);
+    final AccountV1? boxAccount = accountsV1Box.get(encodeKey(accountId: account.id));
     if (boxAccount == null) return false;
 
     await accountsV1Box.delete(boxAccount.id);
-    return !accountsV1Box.containsKey(account.id);
+    return !accountsV1Box.containsKey(encodeKey(accountId: account.id));
   }
 
   static BeshenceAccount? get selectedAccount {
