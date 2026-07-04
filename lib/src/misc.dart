@@ -13,9 +13,10 @@ late final Box<ChainV1> chainsV1Box;
 late final Box<EventV1> eventsV1Box;
 
 class PingBankResponse {
+  final String bankId;
   final List<String> authMethods;
 
-  PingBankResponse({required this.authMethods});
+  PingBankResponse({required this.bankId, required this.authMethods});
 }
 
 class LoginBankResponse {

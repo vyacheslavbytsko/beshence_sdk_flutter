@@ -106,6 +106,7 @@ class Beshence {
         if (jsonResponse['ping'] == 'beshence-pong!') {
           var authMethods = jsonResponse["auth"]["methods"];
           return PingBankResponse(
+              bankId: jsonResponse["id"],
               authMethods: List<String>.from(authMethods)
           );
         } else {
