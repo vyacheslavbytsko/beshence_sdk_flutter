@@ -1,8 +1,6 @@
-import 'dart:convert';
-
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
+import 'package:beshence_sdk_flutter/src/events/init_account.dart';
 import 'package:hive_ce_flutter/adapters.dart';
-import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -58,14 +56,18 @@ class Beshence {
       id = Uuid().v4();
     } while (accountsV1Box.containsKey(id));
 
-    final account = AccountV1(id: id);
-    await accountsV1Box.put(id, account);
+    final boxAccount = AccountV1(id: id);
+    await accountsV1Box.put(id, boxAccount);
 
     if (!accountsV1Box.containsKey(id)) {
       throw StateError('Couldn\'t save account');
     }
 
-    return BeshenceAccount(id: id);
+    var account = BeshenceAccount(id: id);
+    var event = InitAccountEvent(accountId: id);
+    await (await account.requireChain("main")).addEvent(event);
+
+    return account;
   }
 
   static Future<bool> removeAccount(BeshenceAccount account) async {

@@ -1,6 +1,5 @@
+import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
-import 'package:beshence_sdk_flutter/src/models/chain.dart';
-import 'package:beshence_sdk_flutter/src/models/vault.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/vault_v1.dart';
@@ -65,6 +64,14 @@ class BeshenceAccount {
 
   Future<void> addVault({required String address, required String vaultId, required String bankId, required String refreshToken, required String accessToken}) async {
     if(!initialized) throw Exception("Beshence not initialized");
+
+    AddVaultV1Event event = AddVaultV1Event(
+        address: address,
+        vaultId: vaultId,
+        bankId: bankId,
+        addedAt: DateTime.timestamp()
+    );
+    await (await requireChain("main")).addEvent(event);
 
     final VaultV1 newVault = VaultV1(
       id: vaultId,
