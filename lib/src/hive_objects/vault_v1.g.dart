@@ -19,25 +19,28 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
     return VaultV1(
       id: fields[0] as String,
       accountId: fields[1] as String,
-      apiUrls: (fields[2] as List?)?.cast<String>(),
-      accessToken: fields[3] as String?,
-      refreshToken: fields[4] as String?,
+      bankId: fields[2] as String,
+      apiUrls: (fields[3] as List?)?.cast<String>(),
+      accessToken: fields[4] as String?,
+      refreshToken: fields[5] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, VaultV1 obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.accountId)
       ..writeByte(2)
-      ..write(obj.apiUrls)
+      ..write(obj.bankId)
       ..writeByte(3)
-      ..write(obj.accessToken)
+      ..write(obj.apiUrls)
       ..writeByte(4)
+      ..write(obj.accessToken)
+      ..writeByte(5)
       ..write(obj.refreshToken);
   }
 

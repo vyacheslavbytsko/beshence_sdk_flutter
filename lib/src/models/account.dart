@@ -1,10 +1,6 @@
-import 'dart:convert' as convert;
-
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 import 'package:beshence_sdk_flutter/src/models/chain.dart';
-import 'package:hive_ce/hive.dart';
-import 'package:http/http.dart' as http;
-import 'package:uuid/uuid.dart';
+import 'package:beshence_sdk_flutter/src/models/vault.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/vault_v1.dart';
@@ -67,42 +63,29 @@ class BeshenceAccount {
     return boxChains;
   }
 
-  /*Future<void> addVault({required String address, BeshenceVaultLoginPayload? loginPayload}) async {
-    var url = Uri.parse('$address/.well-known/beshence/bank');
+  Future<void> addVault({required String address, required String vaultId, required String bankId, required String refreshToken, required String accessToken}) async {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    try {
-      var response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        var jsonResponse = convert.jsonDecode(response.body);
-        if (jsonResponse is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
-        if (jsonResponse['ping'] == 'beshence-pong!') {
-          // this is an actual beshence bank
-          print('YAAS');
-          // TODO add vault using $accountId_$vaultId
-        } else {
-          throw StateError('Unexpected ping response');
-        }
-      } else {
-        throw StateError('Request failed with status: ${response.statusCode}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
+    final VaultV1 newVault = VaultV1(
+      id: vaultId,
+      accountId: id,
+      bankId: bankId,
+      apiUrls: [address],
+      refreshToken: refreshToken,
+      accessToken: accessToken
+    );
+    await vaultsV1Box.put("${id}_$vaultId", newVault);
   }
 
-  Future<List<BeshenceVault>> get vaults async {
-    await Beshence.init();
+  List<BeshenceVault> get vaults {
+    if(!initialized) throw Exception("Beshence not initialized");
 
-    final Box<VaultV1> box = await getVaultsV1Box();
-    final List<BeshenceVault> boxVaults = box.values
+    final List<BeshenceVault> boxVaults = vaultsV1Box.values
         .where((vault) => vault.accountId == id)
         .map((vault) => BeshenceVault(id: vault.id, account: this))
         .toList();
 
     return boxVaults;
-  }*/
+  }
 }
 

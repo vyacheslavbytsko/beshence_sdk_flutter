@@ -11,3 +11,22 @@ late final Box<AccountV1> accountsV1Box;
 late final Box<VaultV1> vaultsV1Box;
 late final Box<ChainV1> chainsV1Box;
 late final Box<EventV1> eventsV1Box;
+
+class PingBankResponse {
+  final List<String> authMethods;
+
+  PingBankResponse({required this.authMethods});
+}
+
+class LoginBankResponse {
+  final String refreshToken;
+  final String accessToken;
+
+  LoginBankResponse({required this.refreshToken, required this.accessToken});
+}
+
+class VaultsResponse {
+  final List<Map<String, String>> vaults;
+
+  VaultsResponse({required this.vaults});
+}

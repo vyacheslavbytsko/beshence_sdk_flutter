@@ -9,15 +9,18 @@ class VaultV1 extends HiveObject {
   @HiveField(1)
   final String accountId;
   @HiveField(2)
-  List<String>? apiUrls;
+  final String bankId;
   @HiveField(3)
-  String? accessToken;
+  List<String>? apiUrls;
   @HiveField(4)
+  String? accessToken;
+  @HiveField(5)
   String? refreshToken;
 
   VaultV1({
     required this.id,
     required this.accountId,
+    required this.bankId,
     required this.apiUrls,
     required this.accessToken,
     required this.refreshToken
