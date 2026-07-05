@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../hive_registrar.g.dart';
+import 'events/change_vaults_priorities_v1.dart';
 import 'hive_objects/account_v1.dart';
 import 'hive_objects/chain_v1.dart';
 import 'hive_objects/event_v1.dart';
@@ -32,6 +33,7 @@ class Beshence {
     eventsRegistry = registry;
     eventsRegistry.register<InitAccountEvent>(InitAccountEventMapper());
     eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventMapper());
+    eventsRegistry.register<ChangeVaultsPrioritiesV1Event>(ChangeVaultsPrioritiesV1EventMapper());
 
     initialized = true;
   }
