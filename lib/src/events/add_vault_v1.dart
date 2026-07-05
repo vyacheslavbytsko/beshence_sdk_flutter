@@ -4,12 +4,14 @@ class AddVaultV1Event extends BeshenceEvent {
   final String address;
   final String vaultId;
   final String bankId;
+  final int priority;
   final DateTime addedAt;
 
   AddVaultV1Event({
     required this.address,
     required this.vaultId,
     required this.bankId,
+    required this.priority,
     required this.addedAt
   });
 }
@@ -24,6 +26,7 @@ class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
         address: json['address'],
         vaultId: json['vault_id'],
         bankId: json['bank_id'],
+        priority: json['priority'],
         addedAt: DateTime.parse(json["added_at"])
     );
   }
@@ -34,6 +37,7 @@ class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
       "address": event.address,
       "vault_id": event.vaultId,
       "bank_id": event.bankId,
+      "priority": event.priority,
       "added_at": event.addedAt.toIso8601String()
     };
   }

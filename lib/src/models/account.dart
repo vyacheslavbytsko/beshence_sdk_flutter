@@ -64,13 +64,14 @@ class BeshenceAccount {
     return boxChains;
   }
 
-  Future<void> addVault({required String address, required String vaultId, required String bankId, required String refreshToken, required String accessToken}) async {
+  Future<void> addVault({required String address, required String vaultId, required String bankId, required int priority, required String refreshToken, required String accessToken}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
     AddVaultV1Event event = AddVaultV1Event(
         address: address,
         vaultId: vaultId,
         bankId: bankId,
+        priority: priority,
         addedAt: DateTime.timestamp()
     );
     await (await requireChain("main")).addEvent(event);
