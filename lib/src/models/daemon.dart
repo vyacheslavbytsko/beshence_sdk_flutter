@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import '../../beshence_sdk_flutter.dart';
-import 'account.dart';
 
 enum DaemonState { stopped, starting, running, stopping }
 
