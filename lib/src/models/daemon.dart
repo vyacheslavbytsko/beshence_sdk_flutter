@@ -1,6 +1,9 @@
 import 'dart:async';
 
+import 'package:beshence_sdk_flutter/src/misc.dart';
+
 import '../../beshence_sdk_flutter.dart';
+import '../hive_objects/event_v1.dart';
 
 enum DaemonState { stopped, starting, running, stopping }
 
@@ -47,8 +50,8 @@ class BeshenceDaemon {
       try {
         String? localLastEventId = chain.lastEvent?.id;
         String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
-        print("localLastEventId=$localLastEventId");
-        print("remoteLastEventId=$remoteLastEventId");
+        //print("localLastEventId=$localLastEventId");
+        //print("remoteLastEventId=$remoteLastEventId");
         /*
         if (!(localLastEventId != remoteLastEventId && remoteLastEventId != null)) {
           // do nothing
@@ -66,6 +69,21 @@ class BeshenceDaemon {
     for(BeshenceVault vault in account.vaults) {
       List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
       if(onlineBankApiUrls.isEmpty) break;
+
+      for(BeshenceChain chain in account.chains) {
+        try {
+          String? remoteLastEventId = await chain.remote(vault).remoteLastEventId;
+          String? localLastEventId = chain.lastEvent?.id;
+
+          if(localLastEventId != remoteLastEventId) {
+            EventV1 childEventV1 = eventsV1Box.values.where((e) => e.parentId == remoteLastEventId).first;
+            BeshenceEvent childEvent = chain.getEvent(childEventV1.id);
+            chain.remote(vault).pushEvent(childEvent);
+          }
+        } catch(e) {
+          rethrow;
+        }
+      }
     }
   }
 

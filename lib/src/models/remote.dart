@@ -1,12 +1,13 @@
 import 'dart:convert';
 
 import '../../beshence_sdk_flutter.dart';
+import '../misc.dart';
 
 class BeshenceRemoteChain {
-  BeshenceVault vault;
   BeshenceChain chain;
+  BeshenceVault vault;
 
-  BeshenceRemoteChain({required this.vault, required this.chain});
+  BeshenceRemoteChain({required this.chain, required this.vault});
 
   Future<String?> get remoteLastEventId async {
     List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
@@ -33,5 +34,36 @@ class BeshenceRemoteChain {
     }
 
     return remoteLastEventId;
+  }
+
+  Future<void> pushEvent(BeshenceEvent event) async {
+    List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
+    if(onlineBankApiUrls.isEmpty) throw Exception("offline");
+
+    String onlineBankApiUrl = onlineBankApiUrls.first;
+
+    final mapper = eventsRegistry.mapperForType(event.runtimeType);
+    Map<String, dynamic> json = {
+      "n": mapper.name,
+      "e": mapper.toJson(event)
+    };
+    var payload = base64Url.encode(utf8.encode(jsonEncode(json)));
+
+    var url = Uri.parse('$onlineBankApiUrl/api/vault/${vault.id}/chain/${chain.name}/event');
+    var response = await vault.bank.authenticatedHttpPost(url,
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode({
+        "id": event.id,
+        "parent_id": event.parent?.id,
+        "payload": payload
+      }),
+    );
+    var jsonResponse = jsonDecode(response.body);
+
+    if(jsonResponse["err"] != "0") {
+      throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+    }
   }
 }

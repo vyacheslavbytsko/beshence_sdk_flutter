@@ -19,7 +19,7 @@ class BeshenceChain {
     final mapper = eventsRegistry.mapperForType(event.runtimeType);
 
     var payload = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
-    var boxEvent = EventV1(
+    var eventV1 = EventV1(
       id: Uuid().v4(),
         chainName: name,
         name: mapper.name,
@@ -27,26 +27,28 @@ class BeshenceChain {
         payload: payload,
         applied: applied
     );
-    await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: boxEvent.id), boxEvent);
+    await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: eventV1.id), eventV1);
 
-    final boxChainKey = encodeKey(accountId: account.id, chainName: name);
-    final boxChain = chainsV1Box.get(boxChainKey)!;
+    final chainV1key = encodeKey(accountId: account.id, chainName: name);
+    final chainV1 = chainsV1Box.get(chainV1key)!;
     final newBoxChain = ChainV1(
-        name: boxChain.name,
-        accountId: boxChain.accountId,
-      lastEventId: boxEvent.id
+        name: chainV1.name,
+        accountId: chainV1.accountId,
+      lastEventId: eventV1.id
     );
-    await chainsV1Box.put(boxChainKey, newBoxChain);
+    await chainsV1Box.put(chainV1key, newBoxChain);
   }
 
   BeshenceEvent getEvent(String eventId) {
     if(!initialized) throw Exception("Beshence not initialized");
-    EventV1 boxEvent = eventsV1Box.get(encodeKey(accountId: account.id, chainName: name, eventId: eventId))!;
+    EventV1 eventV1 = eventsV1Box.get(encodeKey(accountId: account.id, chainName: name, eventId: eventId))!;
 
-    final json = jsonDecode(utf8.decode(base64Url.decode(boxEvent.payload)));
-    final mapper = eventsRegistry.mapperForName(boxEvent.name);
+    final json = jsonDecode(utf8.decode(base64Url.decode(eventV1.payload)));
+    final mapper = eventsRegistry.mapperForName(eventV1.name);
     final event = mapper.fromJson(json);
-    event.id = boxEvent.id;
+    event.id = eventV1.id;
+    event.chain = this;
+    event.account = account;
 
     return event;
   }
