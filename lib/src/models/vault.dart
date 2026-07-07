@@ -10,7 +10,5 @@ class BeshenceVault {
 
   BeshenceVault({required this.id, required this.account, required this.bank});
 
-  Future<String?> get remoteLastEventId async {
-
-  }
+  BeshenceRemoteChain remoteChain(BeshenceChain chain) => BeshenceRemoteChain(vault: this, chain: chain);
 }

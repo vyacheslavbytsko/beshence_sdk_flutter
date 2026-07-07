@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import '../../beshence_sdk_flutter.dart';
 
@@ -22,7 +21,7 @@ class BeshenceDaemon {
     try {
       // TODO
       await _pullMany();
-      // await _pushOne();
+      await _pushOne();
     } finally {
       // notify listeners
       _loopInProgress = false;
@@ -46,28 +45,27 @@ class BeshenceDaemon {
     if(onlineVault == null || onlineBank == null || onlineBankApiUrl == null) return;
     for(BeshenceChain chain in account.chains) {
       try {
-        var url = Uri.parse('$onlineBankApiUrl/api/vault/${onlineVault.id}/chain/${chain.name}/event/last');
-        var response = await onlineBank.authenticatedHttpGet(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-        );
-        var jsonResponse = jsonDecode(response.body);
-
-        String? lastEventId;
-
-        if(jsonResponse["err"] == "0") {
-          lastEventId = jsonResponse["event"]["id"];
-        } else if(jsonResponse["err"] == "NO_LAST_EVENT") {
-          lastEventId = null;
+        String? localLastEventId = chain.lastEvent?.id;
+        String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
+        print("localLastEventId=$localLastEventId");
+        print("remoteLastEventId=$remoteLastEventId");
+        /*
+        if (!(localLastEventId != remoteLastEventId && remoteLastEventId != null)) {
+          // do nothing
         } else {
-          throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+          // fetch events, add them, etc
         }
-
-        print(lastEventId);
+        */
       } catch (e) {
         rethrow;
       }
+    }
+  }
+
+  Future<void> _pushOne() async {
+    for(BeshenceVault vault in account.vaults) {
+      List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
+      if(onlineBankApiUrls.isEmpty) break;
     }
   }
 

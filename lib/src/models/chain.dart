@@ -56,4 +56,6 @@ class BeshenceChain {
     var eventId = chainsV1Box.get(encodeKey(accountId: account.id, chainName: name))?.lastEventId;
     return eventId == null ? null : getEvent(eventId);
   }
+
+  BeshenceRemoteChain remote(BeshenceVault vault) => BeshenceRemoteChain(vault: vault, chain: this);
 }
