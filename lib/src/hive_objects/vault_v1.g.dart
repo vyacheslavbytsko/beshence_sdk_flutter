@@ -8,7 +8,7 @@ part of 'vault_v1.dart';
 
 class VaultV1Adapter extends TypeAdapter<VaultV1> {
   @override
-  final typeId = 27463;
+  final typeId = 27464;
 
   @override
   VaultV1 read(BinaryReader reader) {
@@ -20,9 +20,6 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
       id: fields[0] as String,
       accountId: fields[1] as String,
       bankId: fields[2] as String,
-      apiUrls: (fields[3] as List?)?.cast<String>(),
-      accessToken: fields[4] as String?,
-      refreshToken: fields[5] as String?,
       priority: (fields[6] as num).toInt(),
     );
   }
@@ -30,19 +27,13 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
   @override
   void write(BinaryWriter writer, VaultV1 obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.accountId)
       ..writeByte(2)
       ..write(obj.bankId)
-      ..writeByte(3)
-      ..write(obj.apiUrls)
-      ..writeByte(4)
-      ..write(obj.accessToken)
-      ..writeByte(5)
-      ..write(obj.refreshToken)
       ..writeByte(6)
       ..write(obj.priority);
   }

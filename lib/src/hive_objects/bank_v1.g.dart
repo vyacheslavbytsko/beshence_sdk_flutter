@@ -1,38 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'chain_v1.dart';
+part of 'bank_v1.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ChainV1Adapter extends TypeAdapter<ChainV1> {
+class BankV1Adapter extends TypeAdapter<BankV1> {
   @override
-  final typeId = 27465;
+  final typeId = 27463;
 
   @override
-  ChainV1 read(BinaryReader reader) {
+  BankV1 read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ChainV1(
-      name: fields[0] as String,
-      accountId: fields[1] as String,
-      lastEventId: fields[2] as String?,
+    return BankV1(
+      id: fields[0] as String,
+      apiUrls: (fields[1] as List?)?.cast<String>(),
+      accessToken: fields[2] as String,
+      refreshToken: fields[3] as String,
     );
   }
 
   @override
-  void write(BinaryWriter writer, ChainV1 obj) {
+  void write(BinaryWriter writer, BankV1 obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.name)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.accountId)
+      ..write(obj.apiUrls)
       ..writeByte(2)
-      ..write(obj.lastEventId);
+      ..write(obj.accessToken)
+      ..writeByte(3)
+      ..write(obj.refreshToken);
   }
 
   @override
@@ -41,7 +44,7 @@ class ChainV1Adapter extends TypeAdapter<ChainV1> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ChainV1Adapter &&
+      other is BankV1Adapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

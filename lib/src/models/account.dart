@@ -1,4 +1,5 @@
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 
 import '../../beshence_sdk_flutter.dart';
@@ -76,16 +77,23 @@ class BeshenceAccount {
     );
     await (await requireChain("main")).addEvent(event);
 
+    if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
+      final BankV1 newBank = BankV1(
+          id: bankId,
+          apiUrls: [address],
+          accessToken: accessToken,
+          refreshToken: refreshToken
+      );
+      await banksV1Box.put(encodeKey(bankId: bankId), newBank);
+    }
+
     final VaultV1 newVault = VaultV1(
       id: vaultId,
       accountId: id,
       bankId: bankId,
-      apiUrls: [address],
-      refreshToken: refreshToken,
-      accessToken: accessToken,
       priority: priority
     );
-    await vaultsV1Box.put(encodeKey(accountId: id, vaultId: vaultId), newVault);
+    await vaultsV1Box.put(encodeKey(accountId: id, bankId: bankId, vaultId: vaultId), newVault);
   }
 
   List<BeshenceVault> get vaults {
@@ -93,7 +101,7 @@ class BeshenceAccount {
 
     final List<BeshenceVault> boxVaults = vaultsV1Box.values
         .where((vault) => vault.accountId == id)
-        .map((vault) => BeshenceVault(id: vault.id, account: this))
+        .map((vault) => BeshenceVault(id: vault.id, account: this, bank: BeshenceBank(id: vault.bankId)))
         .toList()
       ..sort((a, b) => b.id.compareTo(a.id))
       ..sort((a, b) => b.priority.compareTo(a.priority));

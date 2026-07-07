@@ -1,6 +1,7 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/init_account.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -26,6 +27,7 @@ class Beshence {
     String prefix = "beshence_$appId";
     settingsBox = await Hive.openBox('${prefix}_settings');
     accountsV1Box = await Hive.openBox<AccountV1>('${prefix}_accounts_v1');
+    banksV1Box = await Hive.openBox<BankV1>('${prefix}_banks_v1');
     vaultsV1Box = await Hive.openBox<VaultV1>('${prefix}_vaults_v1');
     chainsV1Box = await Hive.openBox<ChainV1>('${prefix}_chains_v1');
     eventsV1Box = await Hive.openBox<EventV1>('${prefix}_events_v1');

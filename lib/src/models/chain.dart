@@ -23,7 +23,7 @@ class BeshenceChain {
       id: Uuid().v4(),
         chainName: name,
         name: mapper.name,
-        parentId: lastEvent?.eventId,
+        parentId: lastEvent?.id,
         payload: payload,
         applied: applied
     );
@@ -46,7 +46,7 @@ class BeshenceChain {
     final json = jsonDecode(utf8.decode(base64Url.decode(boxEvent.payload)));
     final mapper = eventsRegistry.mapperForName(boxEvent.name);
     final event = mapper.fromJson(json);
-    event.eventId = boxEvent.id;
+    event.id = boxEvent.id;
 
     return event;
   }

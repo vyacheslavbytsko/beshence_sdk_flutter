@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
+
+import '../../beshence_sdk_flutter.dart';
 import 'account.dart';
 
 enum DaemonState { stopped, starting, running, stopping }
@@ -11,6 +14,63 @@ class BeshenceDaemon {
   Future<void>? _startFuture;
   Future<void>? _stopFuture;
   Timer? _loopTimer;
+  bool _loopInProgress = false;
+
+  Future<void> _loop(Timer state) async {
+    if (_loopInProgress) return;
+    _loopInProgress = true;
+
+    try {
+      // TODO
+      await _pullMany();
+      // await _pushOne();
+    } finally {
+      // notify listeners
+      _loopInProgress = false;
+    }
+  }
+
+  Future<void> _pullMany() async {
+    BeshenceVault? onlineVault;
+    BeshenceBank? onlineBank;
+    String? onlineBankApiUrl;
+    for (BeshenceVault vault in account.vaults) {
+      if(onlineVault != null) break;
+      List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
+      if(onlineBankApiUrls.isNotEmpty) {
+        onlineVault = vault;
+        onlineBank = vault.bank;
+        onlineBankApiUrl = onlineBankApiUrls.first;
+      }
+    }
+
+    if(onlineVault == null || onlineBank == null || onlineBankApiUrl == null) return;
+    for(BeshenceChain chain in account.chains) {
+      try {
+        var url = Uri.parse('$onlineBankApiUrl/api/vault/${onlineVault.id}/chain/${chain.name}/event/last');
+        var response = await onlineBank.authenticatedHttpGet(url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+        );
+        var jsonResponse = jsonDecode(response.body);
+
+        String? lastEventId;
+
+        if(jsonResponse["err"] == "0") {
+          lastEventId = jsonResponse["event"]["id"];
+        } else if(jsonResponse["err"] == "NO_LAST_EVENT") {
+          lastEventId = null;
+        } else {
+          throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+        }
+
+        print(lastEventId);
+      } catch (e) {
+        rethrow;
+      }
+    }
+  }
 
   BeshenceDaemon._({required this.account});
   
@@ -50,18 +110,15 @@ class BeshenceDaemon {
 
   Future<void> _doStartDaemon() async {
     print('[BeshenceDaemon][account:${account.id}] Starting Beshence Daemon...');
-    _startPrintLoop();
+    _startLoop();
     print('[BeshenceDaemon][account:${account.id}] Beshence Daemon started successfully.');
   }
 
-  void _startPrintLoop() {
-    _loopTimer = Timer.periodic(Duration(seconds: 1), (_) {
-      if (_state != DaemonState.running) return;
-      print('1');
-    });
+  void _startLoop() {
+    _loopTimer = Timer.periodic(Duration(seconds: 1), _loop);
   }
 
-  void _stopPrintLoop() {
+  void _stopLoop() {
     _loopTimer?.cancel();
     _loopTimer = null;
   }
@@ -94,7 +151,7 @@ class BeshenceDaemon {
 
   Future<void> _doStopDaemon() async {
     print('[BeshenceDaemon][account:${account.id}] Stopping Beshence Daemon...');
-    _stopPrintLoop();
+    _stopLoop();
     await Future.delayed(Duration(milliseconds: 10));
     print('[BeshenceDaemon][account:${account.id}] Beshence Daemon stopped.');
   }

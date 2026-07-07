@@ -2,7 +2,7 @@ import 'package:hive_ce/hive.dart';
 
 part 'vault_v1.g.dart';
 
-@HiveType(typeId: 27463)
+@HiveType(typeId: 27464)
 class VaultV1 extends HiveObject {
   @HiveField(0)
   final String id;
@@ -10,12 +10,6 @@ class VaultV1 extends HiveObject {
   final String accountId;
   @HiveField(2)
   final String bankId;
-  @HiveField(3)
-  List<String>? apiUrls;
-  @HiveField(4)
-  String? accessToken;
-  @HiveField(5)
-  String? refreshToken;
   @HiveField(6)
   int priority;
 
@@ -23,9 +17,6 @@ class VaultV1 extends HiveObject {
     required this.id,
     required this.accountId,
     required this.bankId,
-    required this.apiUrls,
-    required this.accessToken,
-    required this.refreshToken,
     required this.priority
   });
 }

@@ -2,7 +2,7 @@ import 'package:hive_ce/hive.dart';
 
 part 'chain_v1.g.dart';
 
-@HiveType(typeId: 27464)
+@HiveType(typeId: 27465)
 class ChainV1 extends HiveObject {
   @HiveField(0)
   final String name;
