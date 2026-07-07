@@ -94,7 +94,9 @@ class BeshenceAccount {
     final List<BeshenceVault> boxVaults = vaultsV1Box.values
         .where((vault) => vault.accountId == id)
         .map((vault) => BeshenceVault(id: vault.id, account: this))
-        .toList();
+        .toList()
+      ..sort((a, b) => b.id.compareTo(a.id))
+      ..sort((a, b) => b.priority.compareTo(a.priority));
 
     return boxVaults;
   }
