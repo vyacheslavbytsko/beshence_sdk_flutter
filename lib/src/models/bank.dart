@@ -42,13 +42,13 @@ class BeshenceBank {
           })
       );
       var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["errcode"] == 0) {
+      if (jsonResponse["err"] == "0") {
         if (jsonResponse is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
         }
         return BeshenceBankLoginResponse(refreshToken: jsonResponse["refresh_token"], accessToken: jsonResponse["access_token"]);
       } else {
-        throw StateError('Request failed with errcode ${jsonResponse["errcode"]} and error ${jsonResponse["error"]}.');
+        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
       }
     } catch (e) {
       rethrow;
@@ -65,7 +65,7 @@ class BeshenceBank {
           }
       );
       var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["errcode"] == 0) {
+      if (jsonResponse["err"] == "0") {
         if (jsonResponse is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
         }
@@ -74,7 +74,7 @@ class BeshenceBank {
         );
         return BeshenceBankVaultsResponse(vaults: vaults);
       } else {
-        throw StateError('Request failed with errcode ${jsonResponse["errcode"]} and error ${jsonResponse["error"]}.');
+        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
       }
     } catch (e) {
       rethrow;
