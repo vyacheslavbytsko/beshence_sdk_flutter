@@ -16,6 +16,8 @@ class VaultV1 extends HiveObject {
   String? accessToken;
   @HiveField(5)
   String? refreshToken;
+  @HiveField(6)
+  int priority;
 
   VaultV1({
     required this.id,
@@ -23,6 +25,7 @@ class VaultV1 extends HiveObject {
     required this.bankId,
     required this.apiUrls,
     required this.accessToken,
-    required this.refreshToken
+    required this.refreshToken,
+    required this.priority
   });
 }

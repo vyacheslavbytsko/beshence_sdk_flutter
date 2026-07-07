@@ -82,7 +82,8 @@ class BeshenceAccount {
       bankId: bankId,
       apiUrls: [address],
       refreshToken: refreshToken,
-      accessToken: accessToken
+      accessToken: accessToken,
+      priority: priority
     );
     await vaultsV1Box.put(encodeKey(accountId: id, vaultId: vaultId), newVault);
   }

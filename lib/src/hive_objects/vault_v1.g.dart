@@ -23,13 +23,14 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
       apiUrls: (fields[3] as List?)?.cast<String>(),
       accessToken: fields[4] as String?,
       refreshToken: fields[5] as String?,
+      priority: (fields[6] as num).toInt(),
     );
   }
 
   @override
   void write(BinaryWriter writer, VaultV1 obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -41,7 +42,9 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
       ..writeByte(4)
       ..write(obj.accessToken)
       ..writeByte(5)
-      ..write(obj.refreshToken);
+      ..write(obj.refreshToken)
+      ..writeByte(6)
+      ..write(obj.priority);
   }
 
   @override
