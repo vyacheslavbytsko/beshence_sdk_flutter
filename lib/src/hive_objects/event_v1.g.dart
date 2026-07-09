@@ -21,10 +21,10 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       name: fields[1] as String,
       chainName: fields[2] as String,
       accountId: fields[3] as String,
-      tempParentId: fields[4] as String?,
-      permParentId: fields[5] as String?,
-      payload: fields[6] as String,
-      applied: fields[7] as bool,
+      parentId: fields[4] as String?,
+      payload: fields[5] as String,
+      applied: fields[6] as bool,
+      synced: fields[7] as bool,
     );
   }
 
@@ -41,13 +41,13 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       ..writeByte(3)
       ..write(obj.accountId)
       ..writeByte(4)
-      ..write(obj.tempParentId)
+      ..write(obj.parentId)
       ..writeByte(5)
-      ..write(obj.permParentId)
-      ..writeByte(6)
       ..write(obj.payload)
+      ..writeByte(6)
+      ..write(obj.applied)
       ..writeByte(7)
-      ..write(obj.applied);
+      ..write(obj.synced);
   }
 
   @override

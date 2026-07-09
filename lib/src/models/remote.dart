@@ -74,10 +74,10 @@ class BeshenceRemoteChain {
       name: eventV1.name,
       chainName: eventV1.chainName,
       accountId: eventV1.accountId,
-      tempParentId: null,
-      permParentId: event.parent?.id,
+      parentId: event.parent?.id,
       payload: eventV1.payload,
       applied: eventV1.applied,
+      synced: true
     );
     eventsV1Box.put(eventV1Key, newEventV1);
   }

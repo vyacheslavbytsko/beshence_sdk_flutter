@@ -56,7 +56,7 @@ class BeshenceDaemon {
         String? localLastPermEventId = localLastEventId;
 
         // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
-        while(localLastPermEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.permParentId == null) {
+        while(localLastPermEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.synced == false) {
           print("while сработал на $localLastPermEventId для chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.parentId}");
           localLastPermEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))?.parentId;
         }
@@ -120,13 +120,13 @@ class BeshenceDaemon {
               name: eventName,
               chainName: chain.name,
               accountId: account.id,
-              tempParentId: null,
-              permParentId: raw["parent_id"],
+              parentId: raw["parent_id"],
               payload: base64UrlEncode(utf8.encode(jsonEncode(eventPayload))),
               applied: false,
+              synced: true
             );
 
-            print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.tempParentId}, ${incomingEventV1.permParentId}");
+            print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.parentId}, ${incomingEventV1.synced}");
 
             // before we add this event, maybe we have event that rely on this parent_id temporarily.
             // or even permanently, which is an error.
@@ -138,10 +138,10 @@ class BeshenceDaemon {
               EventV1 eventV1withIncomingParentId = eventsV1Box.values.where((e) => (
                   e.chainName == chain.name &&
                       e.accountId == account.id &&
-                      e.tempParentId == raw["parent_id"]
+                      e.parentId == raw["parent_id"] && e.synced == false
               )).first;
 
-              print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id}");
+              print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
 
               print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
 
@@ -150,13 +150,13 @@ class BeshenceDaemon {
                   name: eventV1withIncomingParentId.name,
                   chainName: eventV1withIncomingParentId.chainName,
                   accountId: eventV1withIncomingParentId.accountId,
-                  tempParentId: incomingEventV1.id,
-                  permParentId: eventV1withIncomingParentId.permParentId, // should be null ig
+                  parentId: incomingEventV1.id,
                   payload: eventV1withIncomingParentId.payload,
-                  applied: eventV1withIncomingParentId.applied
+                  applied: eventV1withIncomingParentId.applied,
+                  synced: eventV1withIncomingParentId.synced // should be false ig
               );
 
-              print("so now this event (${eventV1withIncomingParentId.id}) has these parents: tempParent ${updatedEventV1.tempParentId} and permParent ${updatedEventV1.permParentId}");
+              print("so now this event (${eventV1withIncomingParentId.id}) has these parent: ${updatedEventV1.parentId}");
 
               await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
 
@@ -189,10 +189,10 @@ class BeshenceDaemon {
                 name: incomingEventV1.name,
                 chainName: incomingEventV1.chainName,
                 accountId: incomingEventV1.accountId,
-                tempParentId: incomingEventV1.tempParentId,
-                permParentId: incomingEventV1.permParentId,
+                parentId: incomingEventV1.parentId,
                 payload: incomingEventV1.payload,
-                applied: true
+                applied: true,
+                synced: incomingEventV1.synced
             );
 
             await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), appliedEventV1);

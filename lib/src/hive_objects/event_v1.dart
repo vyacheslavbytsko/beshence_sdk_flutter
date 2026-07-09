@@ -13,25 +13,22 @@ class EventV1 extends HiveObject {
   @HiveField(3)
   final String accountId;
   @HiveField(4)
-  final String? tempParentId;
+  final String? parentId;
   @HiveField(5)
-  final String? permParentId;
-  @HiveField(6)
   final String payload;
-  @HiveField(7)
+  @HiveField(6)
   final bool applied;
+  @HiveField(7)
+  final bool synced;
 
   EventV1({
     required this.id,
     required this.name,
     required this.chainName,
     required this.accountId,
-    required this.tempParentId,
-    required this.permParentId,
+    required this.parentId,
     required this.payload,
-    required this.applied
+    required this.applied,
+    required this.synced
   });
-
-  String? get parentId => permParentId ?? tempParentId;
-
 }

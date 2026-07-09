@@ -24,10 +24,10 @@ class BeshenceChain {
         name: mapper.name,
         chainName: name,
         accountId: account.id,
-        tempParentId: lastEvent?.id,
-        permParentId: null,
+        parentId: lastEvent?.id,
         payload: payload,
-        applied: applied
+        applied: applied,
+        synced: false
     );
     await eventsV1Box.put(encodeKey(accountId: account.id, chainName: name, eventId: eventV1.id), eventV1);
 
