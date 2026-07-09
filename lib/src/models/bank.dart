@@ -91,7 +91,7 @@ class BeshenceBank {
   Future<List<String>> get onlineApiUrls async {
     BankV1? bankV1 = banksV1Box.get(encodeKey(bankId: id));
     List<String> onlineUrls = [];
-    for(String bankApiUrl in bankV1!.apiUrls!) {
+    for(String bankApiUrl in bankV1!.apiUrls) {
       BeshenceBankPingResponse response = await BeshenceBank.ping(address: bankApiUrl);
       if(response.bankId == id) {
         onlineUrls.add(bankApiUrl);
@@ -102,7 +102,7 @@ class BeshenceBank {
 
   Future<http.Response> authenticatedHttpGet(Uri url, {Map<String, String>? headers}) async {
     BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
-    String accessToken = bankV1.accessToken; String refreshToken = bankV1.refreshToken;
+    String accessToken = bankV1.accessToken!; String refreshToken = bankV1.refreshToken!;
 
     Map<String, String> newHeaders = {};
 
@@ -144,7 +144,7 @@ class BeshenceBank {
 
   Future<http.Response> authenticatedHttpPost(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) async {
     BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
-    String accessToken = bankV1.accessToken; String refreshToken = bankV1.refreshToken;
+    String accessToken = bankV1.accessToken!; String refreshToken = bankV1.refreshToken!;
 
     Map<String, String> newHeaders = {};
 

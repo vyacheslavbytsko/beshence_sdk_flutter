@@ -7,11 +7,11 @@ class BankV1 extends HiveObject {
   @HiveField(0)
   final String id;
   @HiveField(1)
-  List<String>? apiUrls;
+  List<String> apiUrls;
   @HiveField(2)
-  String accessToken;
+  String? accessToken;
   @HiveField(3)
-  String refreshToken;
+  String? refreshToken;
 
   BankV1({
     required this.id,

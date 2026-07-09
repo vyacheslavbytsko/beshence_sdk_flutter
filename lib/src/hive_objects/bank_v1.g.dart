@@ -18,9 +18,9 @@ class BankV1Adapter extends TypeAdapter<BankV1> {
     };
     return BankV1(
       id: fields[0] as String,
-      apiUrls: (fields[1] as List?)?.cast<String>(),
-      accessToken: fields[2] as String,
-      refreshToken: fields[3] as String,
+      apiUrls: (fields[1] as List).cast<String>(),
+      accessToken: fields[2] as String?,
+      refreshToken: fields[3] as String?,
     );
   }
 

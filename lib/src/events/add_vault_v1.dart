@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/vault_v1.dart';
+import 'package:beshence_sdk_flutter/src/misc.dart';
 
 class AddVaultV1Event extends BeshenceEvent {
   final String vaultId;
@@ -22,8 +25,22 @@ class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
 
   @override
   FutureOr<void> apply(AddVaultV1Event event) {
-    // TODO: implement apply
-    throw UnimplementedError();
+    if(!banksV1Box.containsKey(encodeKey(bankId: event.bankId))) {
+      BankV1 bankV1 = BankV1(
+          id: event.bankId,
+          apiUrls: [],
+          accessToken: null,
+          refreshToken: null
+      );
+      banksV1Box.put(encodeKey(bankId: event.bankId), bankV1);
+    }
+    VaultV1 vaultV1 = VaultV1(
+        id: event.vaultId,
+        accountId: event.account!.id,
+        bankId: event.bankId,
+        priority: event.priority
+    );
+    vaultsV1Box.put(encodeKey(accountId: event.account!.id, vaultId: event.vaultId), vaultV1);
   }
 
   @override

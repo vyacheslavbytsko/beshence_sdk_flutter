@@ -14,8 +14,7 @@ class InitAccountEventSpec implements BeshenceEventSpec<InitAccountEvent> {
 
   @override
   FutureOr<void> apply(InitAccountEvent event) {
-    // TODO: implement apply
-    throw UnimplementedError();
+    // do nothing. this is one-time event so we must not handle this type of incoming events
   }
 
   @override

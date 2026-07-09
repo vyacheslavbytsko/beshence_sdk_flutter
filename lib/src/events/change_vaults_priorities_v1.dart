@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
+import '../hive_objects/vault_v1.dart';
+import '../misc.dart';
+
 class ChangeVaultsPrioritiesV1Event extends BeshenceEvent {
-  final List<Map<String, int>> priorities;
+  final Map<String, int> priorities;
 
   ChangeVaultsPrioritiesV1Event({required this.priorities});
 }
@@ -14,14 +17,27 @@ class ChangeVaultsPrioritiesV1EventSpec implements BeshenceEventSpec<ChangeVault
 
   @override
   FutureOr<void> apply(ChangeVaultsPrioritiesV1Event event) {
-    // TODO: implement apply
-    throw UnimplementedError();
+    for(var priority in event.priorities.entries) {
+      String vaultId = priority.key;
+      int newPriority = priority.value;
+
+      VaultV1? vaultV1 = vaultsV1Box.get(encodeKey(accountId: event.account!.id, vaultId: vaultId));
+      if (vaultV1 != null) {
+        VaultV1 newVaultV1 = VaultV1(
+            id: vaultV1.id,
+            accountId: vaultV1.accountId,
+            bankId: vaultV1.bankId,
+            priority: newPriority
+        );
+        vaultsV1Box.put(encodeKey(accountId: event.account!.id, vaultId: vaultId), newVaultV1);
+      }
+    }
   }
 
   @override
   ChangeVaultsPrioritiesV1Event fromJson(Map<String, dynamic> json) {
     return ChangeVaultsPrioritiesV1Event(
-        priorities: List<Map<String, int>>.from(json['priorities'])
+        priorities: Map<String, int>.from(json['priorities'])
     );
   }
 

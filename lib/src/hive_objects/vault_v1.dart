@@ -11,7 +11,7 @@ class VaultV1 extends HiveObject {
   @HiveField(2)
   final String bankId;
   @HiveField(6)
-  int priority;
+  final int priority;
 
   VaultV1({
     required this.id,
