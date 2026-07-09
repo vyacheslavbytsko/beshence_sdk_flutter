@@ -57,25 +57,31 @@ class Beshence {
     return BeshenceAccount(id: boxAccount.id);
   }
 
-  static Future<BeshenceAccount> createAccount() async {
+  static Future<BeshenceAccount> createAccount({String? id, bool initAccountEvent = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    String id;
-    do {
-      id = Uuid().v4();
-    } while (accountsV1Box.containsKey(encodeKey(accountId: id)));
+    String finalId;
+    if(id == null) {
+      String id;
+      do {
+        id = Uuid().v4();
+      } while (accountsV1Box.containsKey(encodeKey(accountId: id)));
+      finalId = id;
+    } else {
+      finalId = id;
+    }
+    final boxAccount = AccountV1(id: finalId);
+    await accountsV1Box.put(encodeKey(accountId: finalId), boxAccount);
 
-    final boxAccount = AccountV1(id: id);
-    await accountsV1Box.put(encodeKey(accountId: id), boxAccount);
-
-    if (!accountsV1Box.containsKey(encodeKey(accountId: id))) {
+    if (!accountsV1Box.containsKey(encodeKey(accountId: finalId))) {
       throw StateError('Couldn\'t save account');
     }
 
-    var account = BeshenceAccount(id: id);
-    var event = InitAccountEvent(accountId: id);
-    await (await account.requireChain("main")).addEvent(event);
-
+    var account = BeshenceAccount(id: finalId);
+    if(initAccountEvent) {
+      var event = InitAccountEvent(accountId: finalId);
+      await (await account.requireChain("main")).addEvent(event);
+    }
     return account;
   }
 
@@ -95,7 +101,7 @@ class Beshence {
     return id != null ? getAccount(id) : (accounts.isNotEmpty ? accounts.first : null);
   }
 
-  static void setSelectedAccount(BeshenceAccount account) async {
+  static Future<void> setSelectedAccount(BeshenceAccount account) async {
     if(!initialized) throw Exception("Beshence not initialized");
     await settingsBox.put('selectedAccountId', account.id);
   }

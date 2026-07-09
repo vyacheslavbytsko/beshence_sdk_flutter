@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:beshence_sdk_flutter/src/misc.dart';
 
 import '../../beshence_sdk_flutter.dart';
+import '../hive_objects/chain_v1.dart';
 import '../hive_objects/event_v1.dart';
 
 enum DaemonState { stopped, starting, running, stopping }
@@ -48,17 +49,30 @@ class BeshenceDaemon {
     }
 
     if(onlineVault == null || onlineBank == null || onlineBankApiUrl == null) return;
+
     for(BeshenceChain chain in account.chains) {
       try {
         String? localLastEventId = chain.lastEvent?.id;
-        String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
+        String? localLastPermEventId = localLastEventId;
 
-        if (localLastEventId == remoteLastEventId) {
-          print("No events to pull");
-          return;
+        // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
+        while(localLastPermEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.permParentId == null) {
+          print("while сработал на $localLastPermEventId для chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.parentId}");
+          localLastPermEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))?.parentId;
         }
 
-        String? cursor = localLastEventId;
+        String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
+
+        print("localLastEventId: $localLastEventId");
+        print("localLastPermEventId: $localLastPermEventId");
+        print("remoteLastEventId: $remoteLastEventId");
+
+        if (localLastPermEventId == remoteLastEventId) {
+          print("No events to pull");
+          continue;
+        }
+
+        String? cursor = localLastPermEventId;
 
         while (true) {
           Uri uri = Uri.parse(
@@ -69,9 +83,13 @@ class BeshenceDaemon {
                 '${cursor != null ? '?after=$cursor' : ''}',
           );
 
+          print(uri);
+
           final response = await onlineVault.bank.authenticatedHttpGet(uri);
 
           final json = jsonDecode(response.body);
+
+          print(json);
 
           if (json["err"] != "0") {
             if(json["err"] == "PARENT_EVENT_NOT_FOUND") {
@@ -104,9 +122,11 @@ class BeshenceDaemon {
               accountId: account.id,
               tempParentId: null,
               permParentId: raw["parent_id"],
-              payload: eventPayload,
+              payload: base64UrlEncode(utf8.encode(jsonEncode(eventPayload))),
               applied: false,
             );
+
+            print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.tempParentId}, ${incomingEventV1.permParentId}");
 
             // before we add this event, maybe we have event that rely on this parent_id temporarily.
             // or even permanently, which is an error.
@@ -118,27 +138,50 @@ class BeshenceDaemon {
               EventV1 eventV1withIncomingParentId = eventsV1Box.values.where((e) => (
                   e.chainName == chain.name &&
                       e.accountId == account.id &&
-                      e.parentId == incomingEventV1.permParentId
+                      e.tempParentId == raw["parent_id"]
               )).first;
+
+              print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id}");
+
+              print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
 
               EventV1 updatedEventV1 = EventV1(
                   id: eventV1withIncomingParentId.id,
                   name: eventV1withIncomingParentId.name,
                   chainName: eventV1withIncomingParentId.chainName,
                   accountId: eventV1withIncomingParentId.accountId,
-                  tempParentId: incomingEventV1.permParentId,
-                  permParentId: eventV1withIncomingParentId.permParentId,
+                  tempParentId: incomingEventV1.id,
+                  permParentId: eventV1withIncomingParentId.permParentId, // should be null ig
                   payload: eventV1withIncomingParentId.payload,
                   applied: eventV1withIncomingParentId.applied
               );
+
+              print("so now this event (${eventV1withIncomingParentId.id}) has these parents: tempParent ${updatedEventV1.tempParentId} and permParent ${updatedEventV1.permParentId}");
+
               await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
+
+              print("just to check it: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
             } on StateError {
+              print("we didn't find event with this exact parent id as incoming event");
               // we didn't find this event, moving on
             }
 
             await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), incomingEventV1);
+
+            final chainV1key = encodeKey(accountId: account.id, chainName: chain.name);
+            final chainV1 = chainsV1Box.get(chainV1key)!;
+            final newBoxChain = ChainV1(
+                name: chainV1.name,
+                accountId: chainV1.accountId,
+                lastEventId: chainV1.lastEventId == incomingEventV1.parentId ? incomingEventV1.id : chainV1.lastEventId
+            );
+            await chainsV1Box.put(chainV1key, newBoxChain);
+
             final spec = eventsRegistry.specForName(eventName);
             final typedEvent = spec.fromJson(eventPayload);
+            typedEvent.id = incomingEventV1.id;
+            typedEvent.account = BeshenceAccount(id: incomingEventV1.accountId);
+            typedEvent.chain = BeshenceChain(name: incomingEventV1.chainName, account: account);
             await spec.apply(typedEvent);
 
             final appliedEventV1 = EventV1(
@@ -177,8 +220,8 @@ class BeshenceDaemon {
           String? remoteLastEventId = await chain.remote(vault).remoteLastEventId;
           String? localLastEventId = chain.lastEvent?.id;
 
-          print("localLastEventId $localLastEventId");
-          print("remoteLastEventId $remoteLastEventId");
+          print("localLastEventId: $localLastEventId");
+          print("remoteLastEventId: $remoteLastEventId");
 
           if(localLastEventId != remoteLastEventId) {
             EventV1 childEventV1 = eventsV1Box.values.where((e) => (
@@ -193,7 +236,7 @@ class BeshenceDaemon {
             print("No events to push");
           }
         } catch(e) {
-          rethrow;
+          // rethrow;
         }
       }
     }

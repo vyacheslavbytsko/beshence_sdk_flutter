@@ -20,7 +20,7 @@ class BeshenceChain {
 
     var payload = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
     var eventV1 = EventV1(
-        id: Uuid().v4(),
+        id: event.id ?? Uuid().v4(),
         name: mapper.name,
         chainName: name,
         accountId: account.id,
