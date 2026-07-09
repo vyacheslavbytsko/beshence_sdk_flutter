@@ -1,14 +1,12 @@
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
 class AddVaultV1Event extends BeshenceEvent {
-  final List<String> addresses;
   final String vaultId;
   final String bankId;
   final int priority;
   final DateTime addedAt;
 
   AddVaultV1Event({
-    required this.addresses,
     required this.vaultId,
     required this.bankId,
     required this.priority,
@@ -23,7 +21,6 @@ class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
   @override
   AddVaultV1Event fromJson(Map<String, dynamic> json) {
     return AddVaultV1Event(
-        addresses: json['addresses'],
         vaultId: json['vault_id'],
         bankId: json['bank_id'],
         priority: json['priority'],
@@ -34,7 +31,6 @@ class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
   @override
   Map<String, dynamic> toJson(AddVaultV1Event event) {
     return {
-      "addresses": event.addresses,
       "vault_id": event.vaultId,
       "bank_id": event.bankId,
       "priority": event.priority,

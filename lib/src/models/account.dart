@@ -69,7 +69,6 @@ class BeshenceAccount {
     if(!initialized) throw Exception("Beshence not initialized");
 
     AddVaultV1Event event = AddVaultV1Event(
-        addresses: [address],
         vaultId: vaultId,
         bankId: bankId,
         priority: priority,
