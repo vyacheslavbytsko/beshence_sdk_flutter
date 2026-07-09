@@ -18,7 +18,7 @@ class BeshenceChain {
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
 
-    var payload = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
+    var payload = base64.encode(utf8.encode(jsonEncode(mapper.toJson(event))));
     var eventV1 = EventV1(
         id: event.id ?? Uuid().v4(),
         name: mapper.name,
@@ -45,7 +45,7 @@ class BeshenceChain {
     if(!initialized) throw Exception("Beshence not initialized");
     EventV1 eventV1 = eventsV1Box.get(encodeKey(accountId: account.id, chainName: name, eventId: eventId))!;
 
-    final json = jsonDecode(utf8.decode(base64Url.decode(eventV1.payload)));
+    final json = jsonDecode(utf8.decode(base64.decode(eventV1.payload)));
     final mapper = eventsRegistry.specForName(eventV1.name);
     final event = mapper.fromJson(json);
     event.id = eventV1.id;

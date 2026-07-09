@@ -34,7 +34,7 @@ String encodeKey({
   _appendString(builder, chainName);
   _appendUuid(builder, eventId);
 
-  return base64UrlEncode(builder.takeBytes());
+  return base64.encode(builder.takeBytes());
 }
 
 void _appendString(BytesBuilder builder, String? value) {

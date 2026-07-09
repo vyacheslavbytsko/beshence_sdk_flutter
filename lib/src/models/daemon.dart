@@ -111,7 +111,7 @@ class BeshenceDaemon {
 
           for (final raw in events) {
             final String encodedPayload = raw["payload"];
-            final decodedPayload = jsonDecode(utf8.decode(base64Decode(encodedPayload)));
+            final decodedPayload = jsonDecode(utf8.decode(base64.decode(encodedPayload)));
             final String eventName = decodedPayload["n"];
             final dynamic eventPayload = decodedPayload["e"];
 
@@ -121,7 +121,7 @@ class BeshenceDaemon {
               chainName: chain.name,
               accountId: account.id,
               parentId: raw["parent_id"],
-              payload: base64UrlEncode(utf8.encode(jsonEncode(eventPayload))),
+              payload: base64.encode(utf8.encode(jsonEncode(eventPayload))),
               applied: false,
               synced: true
             );

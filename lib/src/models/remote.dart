@@ -48,7 +48,7 @@ class BeshenceRemoteChain {
       "n": mapper.name,
       "e": mapper.toJson(event)
     };
-    var payload = base64Url.encode(utf8.encode(jsonEncode(json)));
+    var payload = base64.encode(utf8.encode(jsonEncode(json)));
 
     var url = Uri.parse('$onlineBankApiUrl/api/vault/${vault.id}/chain/${chain.name}/event');
     var response = await vault.bank.authenticatedHttpPost(url,
