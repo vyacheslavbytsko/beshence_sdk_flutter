@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
 class ChangeVaultsPrioritiesV1Event extends BeshenceEvent {
@@ -9,6 +11,12 @@ class ChangeVaultsPrioritiesV1Event extends BeshenceEvent {
 class ChangeVaultsPrioritiesV1EventSpec implements BeshenceEventSpec<ChangeVaultsPrioritiesV1Event> {
   @override
   String get name => "change_vaults_priorities_v1";
+
+  @override
+  FutureOr<void> apply(ChangeVaultsPrioritiesV1Event event) {
+    // TODO: implement apply
+    throw UnimplementedError();
+  }
 
   @override
   ChangeVaultsPrioritiesV1Event fromJson(Map<String, dynamic> json) {

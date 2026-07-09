@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:beshence_sdk_flutter/src/misc.dart';
 
@@ -51,16 +52,116 @@ class BeshenceDaemon {
       try {
         String? localLastEventId = chain.lastEvent?.id;
         String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
-        //print("localLastEventId=$localLastEventId");
-        //print("remoteLastEventId=$remoteLastEventId");
-        /*
-        if (!(localLastEventId != remoteLastEventId && remoteLastEventId != null)) {
-          // do nothing
-        } else {
-          // fetch events, add them, etc
+
+        if (localLastEventId == remoteLastEventId) {
+          print("No events to pull");
+          return;
         }
-        */
-      } catch (e) {
+
+        String? cursor = localLastEventId;
+
+        while (true) {
+          Uri uri = Uri.parse(
+            '$onlineBankApiUrl'
+                '/api/vault/${onlineVault.id}'
+                '/chain/${chain.name}'
+                '/event'
+                '${cursor != null ? '?after=$cursor' : ''}',
+          );
+
+          final response = await onlineVault.bank.authenticatedHttpGet(uri);
+
+          final json = jsonDecode(response.body);
+
+          if (json["err"] != "0") {
+            if(json["err"] == "PARENT_NOT_FOUND") {
+              // our local chain is fresher than remote chain so wo don't have anything to pull
+              break;
+            }
+            throw Exception(
+              'Failed to pull events: ${json["errmsg"]}',
+            );
+          }
+
+          final List<dynamic> events = json["events"];
+
+          print(events);
+
+          if (events.isEmpty) {
+            break;
+          }
+
+          for (final raw in events) {
+            final String encodedPayload = raw["payload"];
+            final decodedPayload = jsonDecode(utf8.decode(base64Decode(encodedPayload)));
+            final String eventName = decodedPayload["n"];
+            final dynamic eventPayload = decodedPayload["e"];
+
+            final incomingEventV1 = EventV1(
+              id: raw["id"],
+              name: eventName,
+              chainName: chain.name,
+              accountId: account.id,
+              tempParentId: null,
+              permParentId: raw["parent_id"],
+              payload: eventPayload,
+              applied: false,
+            );
+
+            // before we add this event, maybe we have event that rely on this parent_id temporarily.
+            // or even permanently, which is an error.
+            // we should check it and change its parent id to newly coming event id
+
+            // TODO: handle error when some event's permParentId is the same as coming event parent id
+
+            try {
+              EventV1 eventV1withIncomingParentId = eventsV1Box.values.where((e) => (
+                  e.chainName == chain.name &&
+                      e.accountId == account.id &&
+                      e.parentId == incomingEventV1.permParentId
+              )).first;
+
+              EventV1 updatedEventV1 = EventV1(
+                  id: eventV1withIncomingParentId.id,
+                  name: eventV1withIncomingParentId.name,
+                  chainName: eventV1withIncomingParentId.chainName,
+                  accountId: eventV1withIncomingParentId.accountId,
+                  tempParentId: incomingEventV1.permParentId,
+                  permParentId: eventV1withIncomingParentId.permParentId,
+                  payload: eventV1withIncomingParentId.payload,
+                  applied: eventV1withIncomingParentId.applied
+              );
+              await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
+            } on StateError {
+              // we didn't find this event, moving on
+            }
+
+            await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), incomingEventV1);
+            final spec = eventsRegistry.specForName(eventName);
+            final typedEvent = spec.fromJson(eventPayload);
+            await spec.apply(typedEvent);
+
+            final appliedEventV1 = EventV1(
+                id: incomingEventV1.id,
+                name: incomingEventV1.name,
+                chainName: incomingEventV1.chainName,
+                accountId: incomingEventV1.accountId,
+                tempParentId: incomingEventV1.tempParentId,
+                permParentId: incomingEventV1.permParentId,
+                payload: incomingEventV1.payload,
+                applied: true
+            );
+
+            await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), appliedEventV1);
+
+            cursor = incomingEventV1.id;
+          }
+
+          if (events.length < 100) {
+            break;
+          }
+        }
+      } catch(e) {
         rethrow;
       }
     }
@@ -76,8 +177,16 @@ class BeshenceDaemon {
           String? remoteLastEventId = await chain.remote(vault).remoteLastEventId;
           String? localLastEventId = chain.lastEvent?.id;
 
+          print("localLastEventId $localLastEventId");
+          print("remoteLastEventId $remoteLastEventId");
+
           if(localLastEventId != remoteLastEventId) {
-            EventV1 childEventV1 = eventsV1Box.values.where((e) => e.parentId == remoteLastEventId).first;
+            EventV1 childEventV1 = eventsV1Box.values.where((e) => (
+                e.chainName == chain.name &&
+                    e.accountId == account.id &&
+                    e.parentId == remoteLastEventId
+            )).first;
+            print("childEvent ${childEventV1.id}");
             BeshenceEvent childEvent = chain.getEvent(childEventV1.id);
             chain.remote(vault).pushEvent(childEvent);
           } else {

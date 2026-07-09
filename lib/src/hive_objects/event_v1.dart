@@ -7,22 +7,25 @@ class EventV1 extends HiveObject {
   @HiveField(0)
   final String id;
   @HiveField(1)
-  final String chainName;
-  @HiveField(2)
   final String name;
+  @HiveField(2)
+  final String chainName;
   @HiveField(3)
-  final String? tempParentId;
+  final String accountId;
   @HiveField(4)
-  final String? permParentId;
+  final String? tempParentId;
   @HiveField(5)
-  final String payload;
+  final String? permParentId;
   @HiveField(6)
+  final String payload;
+  @HiveField(7)
   final bool applied;
 
   EventV1({
     required this.id,
-    required this.chainName,
     required this.name,
+    required this.chainName,
+    required this.accountId,
     required this.tempParentId,
     required this.permParentId,
     required this.payload,

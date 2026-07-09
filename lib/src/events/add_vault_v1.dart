@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
 class AddVaultV1Event extends BeshenceEvent {
@@ -17,6 +19,12 @@ class AddVaultV1Event extends BeshenceEvent {
 class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
   @override
   String get name => "add_vault_v1";
+
+  @override
+  FutureOr<void> apply(AddVaultV1Event event) {
+    // TODO: implement apply
+    throw UnimplementedError();
+  }
 
   @override
   AddVaultV1Event fromJson(Map<String, dynamic> json) {

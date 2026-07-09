@@ -71,8 +71,9 @@ class BeshenceRemoteChain {
     EventV1 eventV1 = eventsV1Box.get(eventV1Key)!;
     EventV1 newEventV1 = EventV1(
       id: eventV1.id,
-      chainName: eventV1.chainName,
       name: eventV1.name,
+      chainName: eventV1.chainName,
+      accountId: eventV1.accountId,
       tempParentId: null,
       permParentId: event.parent?.id,
       payload: eventV1.payload,

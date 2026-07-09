@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
 class InitAccountEvent extends BeshenceEvent {
@@ -9,6 +11,12 @@ class InitAccountEvent extends BeshenceEvent {
 class InitAccountEventSpec implements BeshenceEventSpec<InitAccountEvent> {
   @override
   String get name => "init_account";
+
+  @override
+  FutureOr<void> apply(InitAccountEvent event) {
+    // TODO: implement apply
+    throw UnimplementedError();
+  }
 
   @override
   InitAccountEvent fromJson(Map<String, dynamic> json) {
