@@ -79,6 +79,8 @@ class BeshenceDaemon {
             EventV1 childEventV1 = eventsV1Box.values.where((e) => e.parentId == remoteLastEventId).first;
             BeshenceEvent childEvent = chain.getEvent(childEventV1.id);
             chain.remote(vault).pushEvent(childEvent);
+          } else {
+            print("No events to push");
           }
         } catch(e) {
           rethrow;
