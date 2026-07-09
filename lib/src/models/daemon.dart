@@ -74,7 +74,7 @@ class BeshenceDaemon {
           final json = jsonDecode(response.body);
 
           if (json["err"] != "0") {
-            if(json["err"] == "PARENT_NOT_FOUND") {
+            if(json["err"] == "PARENT_EVENT_NOT_FOUND") {
               // our local chain is fresher than remote chain so wo don't have anything to pull
               break;
             }
