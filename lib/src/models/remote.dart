@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../beshence_sdk_flutter.dart';
+import '../hive_objects/event_v1.dart';
 import '../misc.dart';
 
 class BeshenceRemoteChain {
@@ -65,5 +66,18 @@ class BeshenceRemoteChain {
     if(jsonResponse["err"] != "0") {
       throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
     }
+
+    String eventV1Key = encodeKey(accountId: chain.account.id, chainName: chain.name, eventId: event.id);
+    EventV1 eventV1 = eventsV1Box.get(eventV1Key)!;
+    EventV1 newEventV1 = EventV1(
+      id: eventV1.id,
+      chainName: eventV1.chainName,
+      name: eventV1.name,
+      tempParentId: null,
+      permParentId: event.parent?.id,
+      payload: eventV1.payload,
+      applied: eventV1.applied,
+    );
+    eventsV1Box.put(eventV1Key, newEventV1);
   }
 }

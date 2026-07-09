@@ -25,6 +25,7 @@ class BeshenceDaemon {
       // TODO
       await _pullMany();
       await _pushOne();
+      // await _ensurePermanentParentIDs();
     } finally {
       // notify listeners
       _loopInProgress = false;

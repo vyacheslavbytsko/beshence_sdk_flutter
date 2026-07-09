@@ -20,7 +20,8 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       id: fields[0] as String,
       chainName: fields[1] as String,
       name: fields[2] as String,
-      parentId: fields[3] as String?,
+      tempParentId: fields[3] as String?,
+      permParentId: fields[4] as String?,
       payload: fields[5] as String,
       applied: fields[6] as bool,
     );
@@ -29,7 +30,7 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
   @override
   void write(BinaryWriter writer, EventV1 obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -37,7 +38,9 @@ class EventV1Adapter extends TypeAdapter<EventV1> {
       ..writeByte(2)
       ..write(obj.name)
       ..writeByte(3)
-      ..write(obj.parentId)
+      ..write(obj.tempParentId)
+      ..writeByte(4)
+      ..write(obj.permParentId)
       ..writeByte(5)
       ..write(obj.payload)
       ..writeByte(6)
