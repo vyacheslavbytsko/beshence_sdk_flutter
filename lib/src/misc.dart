@@ -29,7 +29,7 @@ String encodeKey({
   final builder = BytesBuilder(copy: false);
 
   _appendUuid(builder, accountId);
-  _appendUuid(builder, bankId);
+  _appendString(builder, bankId); // TODO: appendBase32
   _appendUuid(builder, vaultId);
   _appendString(builder, chainName);
   _appendUuid(builder, eventId);
