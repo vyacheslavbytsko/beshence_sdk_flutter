@@ -43,7 +43,7 @@ class BeshenceRemoteChain {
 
     String onlineBankApiUrl = onlineBankApiUrls.first;
 
-    final mapper = eventsRegistry.mapperForType(event.runtimeType);
+    final mapper = eventsRegistry.specForType(event.runtimeType);
     Map<String, dynamic> json = {
       "n": mapper.name,
       "e": mapper.toJson(event)

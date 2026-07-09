@@ -16,7 +16,7 @@ class BeshenceChain {
   Future<void> addEvent(BeshenceEvent event, {bool applied = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final mapper = eventsRegistry.mapperForType(event.runtimeType);
+    final mapper = eventsRegistry.specForType(event.runtimeType);
 
     var payload = base64UrlEncode(utf8.encode(jsonEncode(mapper.toJson(event))));
     var eventV1 = EventV1(
@@ -45,7 +45,7 @@ class BeshenceChain {
     EventV1 eventV1 = eventsV1Box.get(encodeKey(accountId: account.id, chainName: name, eventId: eventId))!;
 
     final json = jsonDecode(utf8.decode(base64Url.decode(eventV1.payload)));
-    final mapper = eventsRegistry.mapperForName(eventV1.name);
+    final mapper = eventsRegistry.specForName(eventV1.name);
     final event = mapper.fromJson(json);
     event.id = eventV1.id;
     event.chain = this;

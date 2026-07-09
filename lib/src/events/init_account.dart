@@ -6,7 +6,7 @@ class InitAccountEvent extends BeshenceEvent {
   InitAccountEvent({required this.accountId});
 }
 
-class InitAccountEventMapper implements BeshenceEventMapper<InitAccountEvent> {
+class InitAccountEventSpec implements BeshenceEventSpec<InitAccountEvent> {
   @override
   String get name => "init_account";
 

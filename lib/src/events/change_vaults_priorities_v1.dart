@@ -6,7 +6,7 @@ class ChangeVaultsPrioritiesV1Event extends BeshenceEvent {
   ChangeVaultsPrioritiesV1Event({required this.priorities});
 }
 
-class ChangeVaultsPrioritiesV1EventMapper implements BeshenceEventMapper<ChangeVaultsPrioritiesV1Event> {
+class ChangeVaultsPrioritiesV1EventSpec implements BeshenceEventSpec<ChangeVaultsPrioritiesV1Event> {
   @override
   String get name => "change_vaults_priorities_v1";
 

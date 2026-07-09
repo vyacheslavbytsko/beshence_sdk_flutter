@@ -15,7 +15,7 @@ abstract class BeshenceEvent {
     EventV1? parentEventV1 = eventsV1Box.get(encodeKey(accountId: account!.id, chainName: chain!.name, eventId: eventV1.parentId));
     if(parentEventV1 == null) return null;
     final parentEventPayload = jsonDecode(utf8.decode(base64Url.decode(parentEventV1.payload)));
-    final parentMapper = eventsRegistry.mapperForName(parentEventV1.name);
+    final parentMapper = eventsRegistry.specForName(parentEventV1.name);
     final parentEvent = parentMapper.fromJson(parentEventPayload);
     parentEvent.id = parentEventV1.id;
     parentEvent.chain = chain;
@@ -24,7 +24,7 @@ abstract class BeshenceEvent {
   }
 }
 
-abstract class BeshenceEventMapper<T extends BeshenceEvent> {
+abstract class BeshenceEventSpec<T extends BeshenceEvent> {
   String get name;
 
   T fromJson(Map<String, dynamic> json);
@@ -33,14 +33,14 @@ abstract class BeshenceEventMapper<T extends BeshenceEvent> {
 }
 
 class BeshenceEventRegistry {
-  final _byName = <String, BeshenceEventMapper>{};
-  final _byType = <Type, BeshenceEventMapper>{};
+  final _byName = <String, BeshenceEventSpec>{};
+  final _byType = <Type, BeshenceEventSpec>{};
 
-  void register<T extends BeshenceEvent>(BeshenceEventMapper<T> mapper) {
+  void register<T extends BeshenceEvent>(BeshenceEventSpec<T> mapper) {
     _byName[mapper.name] = mapper;
     _byType[T] = mapper;
   }
 
-  BeshenceEventMapper mapperForName(String name) => _byName[name]!;
-  BeshenceEventMapper mapperForType(Type t) => _byType[t]!;
+  BeshenceEventSpec specForName(String name) => _byName[name]!;
+  BeshenceEventSpec specForType(Type t) => _byType[t]!;
 }

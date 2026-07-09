@@ -14,7 +14,7 @@ class AddVaultV1Event extends BeshenceEvent {
   });
 }
 
-class AddVaultV1EventMapper implements BeshenceEventMapper<AddVaultV1Event> {
+class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
   @override
   String get name => "add_vault_v1";
 

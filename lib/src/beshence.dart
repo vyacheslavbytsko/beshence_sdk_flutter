@@ -33,9 +33,9 @@ class Beshence {
     eventsV1Box = await Hive.openBox<EventV1>('${prefix}_events_v1');
 
     eventsRegistry = registry;
-    eventsRegistry.register<InitAccountEvent>(InitAccountEventMapper());
-    eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventMapper());
-    eventsRegistry.register<ChangeVaultsPrioritiesV1Event>(ChangeVaultsPrioritiesV1EventMapper());
+    eventsRegistry.register<InitAccountEvent>(InitAccountEventSpec());
+    eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventSpec());
+    eventsRegistry.register<ChangeVaultsPrioritiesV1Event>(ChangeVaultsPrioritiesV1EventSpec());
 
     initialized = true;
   }
