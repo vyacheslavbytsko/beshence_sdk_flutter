@@ -129,7 +129,7 @@ class BeshenceBank {
           }
           bankV1.accessToken = jsonResponse["access_token"];
           bankV1.refreshToken = jsonResponse["refresh_token"];
-          banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
+          await banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
           return authenticatedHttpGet(url, headers: headers);
         } else {
           throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
@@ -171,7 +171,7 @@ class BeshenceBank {
           }
           bankV1.accessToken = jsonResponse["access_token"];
           bankV1.refreshToken = jsonResponse["refresh_token"];
-          banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
+          await banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
           return authenticatedHttpGet(url, headers: headers);
         } else {
           throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
