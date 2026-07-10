@@ -79,6 +79,6 @@ class BeshenceRemoteChain {
       applied: eventV1.applied,
       synced: true
     );
-    eventsV1Box.put(eventV1Key, newEventV1);
+    await eventsV1Box.put(eventV1Key, newEventV1);
   }
 }
