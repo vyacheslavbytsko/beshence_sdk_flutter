@@ -53,26 +53,26 @@ class BeshenceDaemon {
     for(BeshenceChain chain in account.chains) {
       try {
         String? localLastEventId = chain.lastEvent?.id;
-        String? localLastPermEventId = localLastEventId;
+        String? localLastSyncedEventId = localLastEventId;
 
         // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
-        while(localLastPermEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.synced == false) {
-          print("while сработал на $localLastPermEventId для chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))!.parentId}");
-          localLastPermEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastPermEventId))?.parentId;
+        while(localLastSyncedEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.synced == false) {
+          print("while сработал на $localLastSyncedEventId для chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
+          localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
         }
 
         String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
 
         print("localLastEventId: $localLastEventId");
-        print("localLastPermEventId: $localLastPermEventId");
+        print("localLastSyncedEventId: $localLastSyncedEventId");
         print("remoteLastEventId: $remoteLastEventId");
 
-        if (localLastPermEventId == remoteLastEventId) {
+        if (localLastSyncedEventId == remoteLastEventId) {
           print("No events to pull");
           continue;
         }
 
-        String? cursor = localLastPermEventId;
+        String? cursor = localLastSyncedEventId;
 
         while (true) {
           Uri uri = Uri.parse(
