@@ -40,7 +40,7 @@ class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
         bankId: event.bankId,
         priority: event.priority
     );
-    vaultsV1Box.put(encodeKey(accountId: event.account!.id, vaultId: event.vaultId), vaultV1);
+    vaultsV1Box.put(encodeKey(accountId: event.account!.id, bankId: event.bankId, vaultId: event.vaultId), vaultV1);
   }
 
   @override
