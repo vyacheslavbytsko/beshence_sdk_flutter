@@ -247,12 +247,7 @@ void _appendBase32(BytesBuilder builder, String? value) {
   var buffer = 0;
   var bits = 0;
 
-  print(value);
-  int i = 0;
   for (final c in value.codeUnits) {
-    print("$i: ${value[i]}, $c");
-    i++;
-
     final v = _base32ToInt(c);
 
     buffer = (buffer << 5) | v;
