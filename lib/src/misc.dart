@@ -247,7 +247,12 @@ void _appendBase32(BytesBuilder builder, String? value) {
   var buffer = 0;
   var bits = 0;
 
+  print(value);
+  int i = 0;
   for (final c in value.codeUnits) {
+    print("$i: ${value[i]}, $c");
+    i++;
+
     final v = _base32ToInt(c);
 
     buffer = (buffer << 5) | v;
@@ -300,13 +305,18 @@ void _appendBase32(BytesBuilder builder, String? value) {
 }
 
 int _base32ToInt(int c) {
+  // A-Z
   if (c >= 65 && c <= 90) {
-    // A-Z
     return c - 65;
   }
 
+  // a-z
+  if (c >= 97 && c <= 122) {
+    return c - 97;
+  }
+
+  // 2-7
   if (c >= 50 && c <= 55) {
-    // 2-7
     return c - 24;
   }
 
@@ -315,10 +325,12 @@ int _base32ToInt(int c) {
 
 int _intToBase32(int value) {
   if (value < 26) {
-    return value + 65;
+    // a-z
+    return value + 97;
   }
 
   if (value < 32) {
+    // 2-7
     return value + 24;
   }
 
