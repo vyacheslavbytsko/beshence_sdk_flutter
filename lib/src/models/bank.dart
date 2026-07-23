@@ -51,6 +51,35 @@ class BeshenceBank {
     }
   }
 
+  Future<List<String>> createVault(String name) async {
+    try {
+      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
+
+      var vaultUrl = Uri.parse('$bankApiUrl/vault');
+      var vaultResponse = await authenticatedHttpPost(vaultUrl,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({
+            'name': name
+          })
+      );
+      var vaultJson = jsonDecode(vaultResponse.body);
+      print(vaultJson);
+      if (vaultJson["err"] == "0") {
+        if (vaultJson is! Map<String, dynamic>) {
+          throw StateError('Invalid response format');
+        }
+
+        return vaultJson["id"]!;
+      } else {
+        throw StateError('Request failed with err ${vaultJson["err"]} and error ${vaultJson["errmsg"]}.');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<http.Response> authenticatedHttpGet(Uri url, {Map<String, String>? headers}) async {
     BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
     String accessToken = bankV1.accessToken!; String refreshToken = bankV1.refreshToken!;
