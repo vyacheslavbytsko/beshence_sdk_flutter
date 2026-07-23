@@ -228,4 +228,12 @@ class Beshence {
       rethrow;
     }
   }
+
+  static List<BeshenceBank> get banks {
+    if(!initialized) throw Exception("Beshence not initialized");
+
+    List<BankV1> banksV1 = banksV1Box.values.toList();
+
+    return [for (var bankV1 in banksV1) BeshenceBank(id: bankV1.id)];
+  }
 }
