@@ -114,9 +114,9 @@ class Beshence {
     await settingsBox.delete('selectedAccountId');
   }
 
-  static Future<List<String>> getBankApiUrls({required String id}) async {
+  static Future<List<String>> getBankApiUrls({required String bankId}) async {
     try {
-      var gatewayUri = Uri.parse("https://gateway.beshence.com/api/bank/$id/urls");
+      var gatewayUri = Uri.parse("https://gateway.beshence.com/api/bank/$bankId/urls");
       var gatewayResponse = await http.get(gatewayUri);
 
       var gatewayJson = jsonDecode(gatewayResponse.body);
@@ -135,8 +135,8 @@ class Beshence {
     }
   }
 
-  static Future<BeshenceBankPingResponse> pingBank({required String id}) async {
-      List<String> bankApiUrls = await getBankApiUrls(id: id);
+  static Future<BeshenceBankPingResponse> pingBank({required String bankId}) async {
+      List<String> bankApiUrls = await getBankApiUrls(bankId: bankId);
 
       for (String bankApiUrl in bankApiUrls) {
         try {
@@ -166,9 +166,11 @@ class Beshence {
 
   }
 
-  static Future<BeshenceBankLoginResponse> loginToBank({required String apiUrl, required String username, required String password}) async {
+  static Future<void> loginToBank({required String bankId, required String username, required String password}) async {
     try {
-      var url = Uri.parse('$apiUrl/auth/login');
+      String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
+
+      var url = Uri.parse('$bankApiUrl/auth/login');
       var response = await http.post(url,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
@@ -183,7 +185,16 @@ class Beshence {
         if (jsonResponse is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
         }
-        return BeshenceBankLoginResponse(refreshToken: jsonResponse["refresh_token"], accessToken: jsonResponse["access_token"]);
+
+        if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
+          final BankV1 newBank = BankV1(
+              id: bankId,
+              apiUrls: await getBankApiUrls(bankId: bankId),
+              accessToken: jsonResponse["access_token"],
+              refreshToken: jsonResponse["refresh_token"]
+          );
+          await banksV1Box.put(encodeKey(bankId: bankId), newBank);
+        }
       } else {
         throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
       }

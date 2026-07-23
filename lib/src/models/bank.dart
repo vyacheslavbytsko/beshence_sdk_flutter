@@ -15,7 +15,7 @@ class BeshenceBank {
     BankV1? bankV1 = banksV1Box.get(encodeKey(bankId: id));
     List<String> onlineUrls = [];
     for(String bankApiUrl in bankV1!.apiUrls) {
-      BeshenceBankPingResponse response = await Beshence.pingBank(id: id);
+      BeshenceBankPingResponse response = await Beshence.pingBank(bankId: id);
       if(response.bankId == id) {
         onlineUrls.add(bankApiUrl);
       }
