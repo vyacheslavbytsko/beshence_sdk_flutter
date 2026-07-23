@@ -166,9 +166,9 @@ class Beshence {
 
   }
 
-  static Future<BeshenceBankLoginResponse> loginToBank({required String address, required String username, required String password}) async {
+  static Future<BeshenceBankLoginResponse> loginToBank({required String apiUrl, required String username, required String password}) async {
     try {
-      var url = Uri.parse('$address/api/auth/login');
+      var url = Uri.parse('$apiUrl/auth/login');
       var response = await http.post(url,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
