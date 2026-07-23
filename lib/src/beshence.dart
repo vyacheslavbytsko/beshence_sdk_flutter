@@ -15,7 +15,7 @@ import 'hive_objects/vault_v1.dart';
 import 'misc.dart';
 
 class Beshence {
-  static Future<void> init(BeshenceEventRegistry registry) async {
+  static Future<void> init({BeshenceEventRegistry? registry}) async {
     if (initialized) return;
 
     await Hive.initFlutter();
@@ -32,7 +32,7 @@ class Beshence {
     chainsV1Box = await Hive.openBox<ChainV1>('${prefix}_chains_v1');
     eventsV1Box = await Hive.openBox<EventV1>('${prefix}_events_v1');
 
-    eventsRegistry = registry;
+    eventsRegistry = registry ?? BeshenceEventRegistry();
     eventsRegistry.register<InitAccountEvent>(InitAccountEventSpec());
     eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventSpec());
     eventsRegistry.register<ChangeVaultsPrioritiesV1Event>(ChangeVaultsPrioritiesV1EventSpec());
