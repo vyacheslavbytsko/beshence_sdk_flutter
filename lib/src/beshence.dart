@@ -152,6 +152,7 @@ class Beshence {
           if (bankJson['ping'] == 'beshence-bank-pong!') {
             return BeshenceBankPingResponse(
                 bankId: bankJson["id"],
+                apiUrl: bankApiUrl,
                 registerMethods: List<String>.from(bankJson["auth"]["register"]["methods"]),
                 loginMethods: List<String>.from(bankJson["auth"]["login"]["methods"])
             );

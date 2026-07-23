@@ -110,10 +110,15 @@ class BeshenceBank {
 
 class BeshenceBankPingResponse {
   final String bankId;
+  final String apiUrl;
   final List<String> registerMethods;
   final List<String> loginMethods;
 
-  BeshenceBankPingResponse({required this.bankId, required this.registerMethods, required this.loginMethods});
+  BeshenceBankPingResponse({
+    required this.bankId,
+    required this.apiUrl,
+    required this.registerMethods,
+    required this.loginMethods});
 }
 
 class BeshenceBankLoginResponse {
