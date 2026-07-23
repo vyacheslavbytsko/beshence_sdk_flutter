@@ -1,5 +1,4 @@
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
-import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 
 import '../../beshence_sdk_flutter.dart';
