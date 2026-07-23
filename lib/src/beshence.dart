@@ -46,18 +46,18 @@ class Beshence {
   static List<BeshenceAccount> get accounts {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    List<AccountV1> boxAccounts = accountsV1Box.values.toList();
+    List<AccountV1> accountsV1 = accountsV1Box.values.toList();
 
-    return [for (var account in boxAccounts) BeshenceAccount(id: account.id)];
+    return [for (var accountV1 in accountsV1) BeshenceAccount(id: accountV1.id)];
   }
 
   static BeshenceAccount? getAccount(String id) {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final AccountV1? boxAccount = accountsV1Box.get(encodeKey(accountId: id));
-    if (boxAccount == null) return null;
+    final AccountV1? accountV1 = accountsV1Box.get(encodeKey(accountId: id));
+    if (accountV1 == null) return null;
 
-    return BeshenceAccount(id: boxAccount.id);
+    return BeshenceAccount(id: accountV1.id);
   }
 
   static Future<BeshenceAccount> createAccount({String? id, bool initAccountEvent = true}) async {
@@ -73,8 +73,8 @@ class Beshence {
     } else {
       finalId = id;
     }
-    final boxAccount = AccountV1(id: finalId);
-    await accountsV1Box.put(encodeKey(accountId: finalId), boxAccount);
+    final accountV1 = AccountV1(id: finalId);
+    await accountsV1Box.put(encodeKey(accountId: finalId), accountV1);
 
     if (!accountsV1Box.containsKey(encodeKey(accountId: finalId))) {
       throw StateError('Couldn\'t save account');
@@ -91,10 +91,10 @@ class Beshence {
   static Future<bool> removeAccount(BeshenceAccount account) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
-    final AccountV1? boxAccount = accountsV1Box.get(encodeKey(accountId: account.id));
-    if (boxAccount == null) return false;
+    final AccountV1? accountV1 = accountsV1Box.get(encodeKey(accountId: account.id));
+    if (accountV1 == null) return false;
 
-    await accountsV1Box.delete(boxAccount.id);
+    await accountsV1Box.delete(accountV1.id);
     return !accountsV1Box.containsKey(encodeKey(accountId: account.id));
   }
 
@@ -116,8 +116,8 @@ class Beshence {
 
   static Future<List<String>> getBankApiUrls({required String bankId}) async {
     try {
-      var gatewayUri = Uri.parse("https://gateway.beshence.com/api/bank/$bankId/urls");
-      var gatewayResponse = await http.get(gatewayUri);
+      var gatewayUrl = Uri.parse("https://gateway.beshence.com/api/bank/$bankId/urls");
+      var gatewayResponse = await http.get(gatewayUrl);
 
       var gatewayJson = jsonDecode(gatewayResponse.body);
 
@@ -170,8 +170,8 @@ class Beshence {
     try {
       String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
 
-      var url = Uri.parse('$bankApiUrl/auth/login');
-      var response = await http.post(url,
+      var loginUrl = Uri.parse('$bankApiUrl/auth/login');
+      var loginResponse = await http.post(loginUrl,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -180,9 +180,9 @@ class Beshence {
             'password': password
           })
       );
-      var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["err"] == "0") {
-        if (jsonResponse is! Map<String, dynamic>) {
+      var loginJson = jsonDecode(loginResponse.body);
+      if (loginJson["err"] == "0") {
+        if (loginJson is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
         }
 
@@ -190,29 +190,31 @@ class Beshence {
           final BankV1 newBank = BankV1(
               id: bankId,
               apiUrls: await getBankApiUrls(bankId: bankId),
-              accessToken: jsonResponse["access_token"],
-              refreshToken: jsonResponse["refresh_token"]
+              accessToken: loginJson["access_token"],
+              refreshToken: loginJson["refresh_token"]
           );
           await banksV1Box.put(encodeKey(bankId: bankId), newBank);
         }
       } else {
-        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+        throw StateError('Request failed with err ${loginJson["err"]} and error ${loginJson["errmsg"]}.');
       }
     } catch (e) {
       rethrow;
     }
   }
 
-  static Future<BeshenceBankVaultsResponse> getVaultsOfBank({required String address, required String accessToken}) async {
+  // TODO: should be tied to BeshenceBank
+  static Future<BeshenceBankVaultsResponse> getVaultsOfBank({required String bankId}) async {
     try {
-      var url = Uri.parse('$address/api/vault');
-      var response = await http.get(url,
+      String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
+
+      var vaultsUrl = Uri.parse('$bankApiUrl/vault');
+      var vaultsResponse = await getBank(bankId)!.authenticatedHttpGet(vaultsUrl,
           headers: <String, String>{
-            'Authorization': 'Bearer $accessToken',
             'Content-Type': 'application/json; charset=UTF-8',
           }
       );
-      var jsonResponse = jsonDecode(response.body);
+      var jsonResponse = jsonDecode(vaultsResponse.body);
       if (jsonResponse["err"] == "0") {
         if (jsonResponse is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
@@ -235,5 +237,14 @@ class Beshence {
     List<BankV1> banksV1 = banksV1Box.values.toList();
 
     return [for (var bankV1 in banksV1) BeshenceBank(id: bankV1.id)];
+  }
+
+  static BeshenceBank? getBank(String id) {
+    if(!initialized) throw Exception("Beshence not initialized");
+
+    final BankV1? bankV1 = banksV1Box.get(encodeKey(bankId: id));
+    if (bankV1 == null) return null;
+
+    return BeshenceBank(id: id);
   }
 }
