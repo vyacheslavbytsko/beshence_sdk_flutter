@@ -23,6 +23,34 @@ class BeshenceBank {
     return onlineUrls;
   }
 
+  Future<List<BeshenceRemoteVault>> getVaults() async {
+    try {
+      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
+
+      var vaultsUrl = Uri.parse('$bankApiUrl/vault');
+      var vaultsResponse = await authenticatedHttpGet(vaultsUrl,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          }
+      );
+      var jsonResponse = jsonDecode(vaultsResponse.body);
+      if (jsonResponse["err"] == "0") {
+        if (jsonResponse is! Map<String, dynamic>) {
+          throw StateError('Invalid response format');
+        }
+        List<BeshenceRemoteVault> vaults = List.from(
+            jsonResponse["vaults"].map((item) =>
+                BeshenceRemoteVault(id: item["id"], bank: this, name: item["name"])));
+
+        return vaults;
+      } else {
+        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<http.Response> authenticatedHttpGet(Uri url, {Map<String, String>? headers}) async {
     BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
     String accessToken = bankV1.accessToken!; String refreshToken = bankV1.refreshToken!;
@@ -128,8 +156,10 @@ class BeshenceBankLoginResponse {
   BeshenceBankLoginResponse({required this.refreshToken, required this.accessToken});
 }
 
-class BeshenceBankVaultsResponse {
-  final List<Map<String, String>> vaults;
+class BeshenceRemoteVault {
+  final String id;
+  final BeshenceBank bank;
+  final String name;
 
-  BeshenceBankVaultsResponse({required this.vaults});
+  BeshenceRemoteVault({required this.id, required this.bank, required this.name});
 }

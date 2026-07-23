@@ -203,28 +203,37 @@ class Beshence {
     }
   }
 
-  // TODO: should be tied to BeshenceBank
-  static Future<BeshenceBankVaultsResponse> getVaultsOfBank({required String bankId}) async {
+  static Future<void> registerInBank({required String bankId, required String username, required String password}) async {
     try {
       String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
 
-      var vaultsUrl = Uri.parse('$bankApiUrl/vault');
-      var vaultsResponse = await getBank(bankId)!.authenticatedHttpGet(vaultsUrl,
+      var loginUrl = Uri.parse('$bankApiUrl/auth/register');
+      var loginResponse = await http.post(loginUrl,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
-          }
+          },
+          body: jsonEncode({
+            'username': username,
+            'password': password
+          })
       );
-      var jsonResponse = jsonDecode(vaultsResponse.body);
-      if (jsonResponse["err"] == "0") {
-        if (jsonResponse is! Map<String, dynamic>) {
+      var loginJson = jsonDecode(loginResponse.body);
+      if (loginJson["err"] == "0") {
+        if (loginJson is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
         }
-        List<Map<String, String>> vaults = List<Map<String, String>>.from(
-            jsonResponse["vaults"].map((item) => Map<String, String>.from(item))
-        );
-        return BeshenceBankVaultsResponse(vaults: vaults);
+
+        if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
+          final BankV1 newBank = BankV1(
+              id: bankId,
+              apiUrls: await getBankApiUrls(bankId: bankId),
+              accessToken: loginJson["access_token"],
+              refreshToken: loginJson["refresh_token"]
+          );
+          await banksV1Box.put(encodeKey(bankId: bankId), newBank);
+        }
       } else {
-        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+        throw StateError('Request failed with err ${loginJson["err"]} and error ${loginJson["errmsg"]}.');
       }
     } catch (e) {
       rethrow;
