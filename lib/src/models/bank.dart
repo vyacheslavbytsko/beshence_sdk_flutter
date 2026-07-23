@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:beshence_sdk_flutter/src/misc.dart';
 import 'package:http/http.dart' as http;
 
+import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/bank_v1.dart';
 
 class BeshenceBank {
@@ -10,89 +11,11 @@ class BeshenceBank {
 
   BeshenceBank({required this.id});
 
-  static Future<BeshenceBankPingResponse> ping({required String address}) async {
-    try {
-      var url = Uri.parse('$address/.well-known/beshence/bank');
-      var response = await http.get(url);
-      if (response.statusCode == 200) {
-        var jsonResponse = jsonDecode(response.body);
-        if (jsonResponse is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
-        if (jsonResponse['ping'] == 'beshence-pong!') {
-          return BeshenceBankPingResponse(
-              bankId: jsonResponse["id"],
-              registerMethods: List<String>.from(jsonResponse["auth"]["register"]["methods"]),
-              loginMethods: List<String>.from(jsonResponse["auth"]["login"]["methods"])
-          );
-        } else {
-          throw StateError('Unexpected ping response');
-        }
-      } else {
-        throw StateError('Request failed with status: ${response.statusCode}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  static Future<BeshenceBankLoginResponse> login({required String address, required String username, required String password}) async {
-    try {
-      var url = Uri.parse('$address/api/auth/login');
-      var response = await http.post(url,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode({
-            'username': username,
-            'password': password
-          })
-      );
-      var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["err"] == "0") {
-        if (jsonResponse is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
-        return BeshenceBankLoginResponse(refreshToken: jsonResponse["refresh_token"], accessToken: jsonResponse["access_token"]);
-      } else {
-        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  static Future<BeshenceBankVaultsResponse> getVaults({required String address, required String accessToken}) async {
-    try {
-      var url = Uri.parse('$address/api/vault');
-      var response = await http.get(url,
-          headers: <String, String>{
-            'Authorization': 'Bearer $accessToken',
-            'Content-Type': 'application/json; charset=UTF-8',
-          }
-      );
-      var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["err"] == "0") {
-        if (jsonResponse is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
-        List<Map<String, String>> vaults = List<Map<String, String>>.from(
-            jsonResponse["vaults"].map((item) => Map<String, String>.from(item))
-        );
-        return BeshenceBankVaultsResponse(vaults: vaults);
-      } else {
-        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   Future<List<String>> get onlineApiUrls async {
     BankV1? bankV1 = banksV1Box.get(encodeKey(bankId: id));
     List<String> onlineUrls = [];
     for(String bankApiUrl in bankV1!.apiUrls) {
-      BeshenceBankPingResponse response = await BeshenceBank.ping(address: bankApiUrl);
+      BeshenceBankPingResponse response = await Beshence.pingBank(id: id);
       if(response.bankId == id) {
         onlineUrls.add(bankApiUrl);
       }

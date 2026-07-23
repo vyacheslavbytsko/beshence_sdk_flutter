@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/init_account.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:hive_ce_flutter/adapters.dart';
+import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -109,5 +112,108 @@ class Beshence {
   static Future<void> removeSelectedAccount() async {
     if(!initialized) throw Exception("Beshence not initialized");
     await settingsBox.delete('selectedAccountId');
+  }
+
+  static Future<List<String>> getBankApiUrls({required String id}) async {
+    try {
+      var gatewayUri = Uri.parse("https://gateway.beshence.com/api/bank/$id/urls");
+      var gatewayResponse = await http.get(gatewayUri);
+
+      var gatewayJson = jsonDecode(gatewayResponse.body);
+
+      if (gatewayJson is! Map<String, dynamic>) {
+        throw StateError('Invalid response format');
+      }
+
+      if (gatewayJson["err"] != "0") {
+        throw StateError("Error ${gatewayJson["err"]}");
+      }
+
+      return List<String>.from(gatewayJson["urls"]);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<BeshenceBankPingResponse> pingBank({required String id}) async {
+      List<String> bankApiUrls = await getBankApiUrls(id: id);
+
+      for (String bankApiUrl in bankApiUrls) {
+        try {
+          var bankUri = Uri.parse("$bankApiUrl/ping");
+          var bankResponse = await http.get(bankUri);
+
+          var bankJson = jsonDecode(bankResponse.body);
+
+          if (bankJson is! Map<String, dynamic>) {
+            throw StateError('Invalid response format');
+          }
+
+          if (bankJson['ping'] == 'beshence-bank-pong!') {
+            return BeshenceBankPingResponse(
+                bankId: bankJson["id"],
+                registerMethods: List<String>.from(bankJson["auth"]["register"]["methods"]),
+                loginMethods: List<String>.from(bankJson["auth"]["login"]["methods"])
+            );
+          } else {
+            throw StateError('Unexpected ping response');
+          }
+        } catch (e) {}
+      }
+
+      throw StateError("cant access this bank");
+
+  }
+
+  static Future<BeshenceBankLoginResponse> loginToBank({required String address, required String username, required String password}) async {
+    try {
+      var url = Uri.parse('$address/api/auth/login');
+      var response = await http.post(url,
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({
+            'username': username,
+            'password': password
+          })
+      );
+      var jsonResponse = jsonDecode(response.body);
+      if (jsonResponse["err"] == "0") {
+        if (jsonResponse is! Map<String, dynamic>) {
+          throw StateError('Invalid response format');
+        }
+        return BeshenceBankLoginResponse(refreshToken: jsonResponse["refresh_token"], accessToken: jsonResponse["access_token"]);
+      } else {
+        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  static Future<BeshenceBankVaultsResponse> getVaultsOfBank({required String address, required String accessToken}) async {
+    try {
+      var url = Uri.parse('$address/api/vault');
+      var response = await http.get(url,
+          headers: <String, String>{
+            'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json; charset=UTF-8',
+          }
+      );
+      var jsonResponse = jsonDecode(response.body);
+      if (jsonResponse["err"] == "0") {
+        if (jsonResponse is! Map<String, dynamic>) {
+          throw StateError('Invalid response format');
+        }
+        List<Map<String, String>> vaults = List<Map<String, String>>.from(
+            jsonResponse["vaults"].map((item) => Map<String, String>.from(item))
+        );
+        return BeshenceBankVaultsResponse(vaults: vaults);
+      } else {
+        throw StateError('Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 }
