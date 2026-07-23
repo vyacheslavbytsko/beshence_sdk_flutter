@@ -20,10 +20,10 @@ class BeshenceBank {
           throw StateError('Invalid response format');
         }
         if (jsonResponse['ping'] == 'beshence-pong!') {
-          var authMethods = jsonResponse["auth"]["methods"];
           return BeshenceBankPingResponse(
               bankId: jsonResponse["id"],
-              authMethods: List<String>.from(authMethods)
+              registerMethods: List<String>.from(jsonResponse["auth"]["register"]["methods"]),
+              loginMethods: List<String>.from(jsonResponse["auth"]["login"]["methods"])
           );
         } else {
           throw StateError('Unexpected ping response');
@@ -187,9 +187,10 @@ class BeshenceBank {
 
 class BeshenceBankPingResponse {
   final String bankId;
-  final List<String> authMethods;
+  final List<String> registerMethods;
+  final List<String> loginMethods;
 
-  BeshenceBankPingResponse({required this.bankId, required this.authMethods});
+  BeshenceBankPingResponse({required this.bankId, required this.registerMethods, required this.loginMethods});
 }
 
 class BeshenceBankLoginResponse {
