@@ -65,7 +65,7 @@ class BeshenceAccount {
     return boxChains;
   }
 
-  Future<BeshenceVault> addVault({required String address, required String vaultId, required String bankId, required int priority, required String refreshToken, required String accessToken, bool addVaultEvent = true}) async {
+  Future<BeshenceVault> addVault({required String bankId, required String vaultId, required int priority, bool addVaultEvent = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
     if(addVaultEvent) {
@@ -79,13 +79,7 @@ class BeshenceAccount {
     }
 
     if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
-      final BankV1 newBank = BankV1(
-          id: bankId,
-          apiUrls: [address],
-          accessToken: accessToken,
-          refreshToken: refreshToken
-      );
-      await banksV1Box.put(encodeKey(bankId: bankId), newBank);
+      throw Exception("could not find this bank");
     }
 
     final VaultV1 newVault = VaultV1(
