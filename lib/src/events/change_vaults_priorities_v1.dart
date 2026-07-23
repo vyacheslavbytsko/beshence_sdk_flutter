@@ -2,9 +2,6 @@ import 'dart:async';
 
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
-import '../hive_objects/vault_v1.dart';
-import '../misc.dart';
-
 class ChangeVaultsPrioritiesV1Event extends BeshenceEvent {
   final Map<String, int> priorities;
 
