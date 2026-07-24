@@ -28,7 +28,19 @@ class BeshenceVaultChain {
 
     List<BeshenceVaultChain> chains = await vault.chains;
     if(!chains.contains(BeshenceVaultChain(chain: chain, vault: vault))) {
-
+      var createChainUrl = Uri.parse("$onlineBankApiUrl/vault/${vault.id}/chain");
+      var createChainResponse = await vault.bank.authenticatedHttpPost(createChainUrl,
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          "name": chain.name
+        })
+      );
+      var createChainJson = jsonDecode(createChainResponse.body);
+      if(createChainJson["err"] != "0") {
+        throw StateError('Request failed with err ${createChainJson["err"]} and error ${createChainJson["errmsg"]}.');
+      }
     }
 
     var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
@@ -55,6 +67,8 @@ class BeshenceVaultChain {
   Future<void> pushEvent(BeshenceEvent event) async {
     String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
     if(onlineBankApiUrl == null) throw Exception("offline");
+
+
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
     Map<String, dynamic> json = {
