@@ -107,7 +107,7 @@ class BeshenceAccount {
   }
 
   Future<String> issueToken({required String token, required String scope}) async {
-    return (await requireChain("tokens")).addEvent(IssueTokenV1Event(token: token, scope: scope));
+    return (await requireChain("tokens")).addEvent(IssueTokenV1Event(tokenId: token, scope: scope));
   }
 }
 

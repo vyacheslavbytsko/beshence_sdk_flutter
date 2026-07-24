@@ -28,7 +28,7 @@ abstract class BeshenceEvent {
 abstract class BeshenceEventSpec<T extends BeshenceEvent> {
   String get name;
 
-  FutureOr<void> apply(T event);
+  FutureOr<bool> apply(T event);
 
   T fromJson(Map<String, dynamic> json);
 

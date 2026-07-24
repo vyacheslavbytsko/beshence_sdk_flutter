@@ -24,7 +24,7 @@ class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
   String get name => "add_vault_v1";
 
   @override
-  FutureOr<void> apply(AddVaultV1Event event) {
+  FutureOr<bool> apply(AddVaultV1Event event) {
     if(!banksV1Box.containsKey(encodeKey(bankId: event.bankId))) {
       BankV1 bankV1 = BankV1(
           id: event.bankId,
@@ -41,6 +41,7 @@ class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
         priority: event.priority
     );
     vaultsV1Box.put(encodeKey(accountId: event.account!.id, bankId: event.bankId, vaultId: event.vaultId), vaultV1);
+    return true;
   }
 
   @override

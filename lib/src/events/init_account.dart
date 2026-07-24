@@ -13,8 +13,9 @@ class InitAccountEventSpec implements BeshenceEventSpec<InitAccountEvent> {
   String get name => "init_account";
 
   @override
-  FutureOr<void> apply(InitAccountEvent event) {
+  FutureOr<bool> apply(InitAccountEvent event) {
     // do nothing. this is one-time event so we must not handle this type of incoming events
+    return true;
   }
 
   @override

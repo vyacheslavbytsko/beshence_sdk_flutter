@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 
 class IssueTokenV1Event extends BeshenceEvent {
-  final String token;
+  final String tokenId;
   final String scope;
 
-  IssueTokenV1Event({required this.token, required this.scope});
+  IssueTokenV1Event({required this.tokenId, required this.scope});
 }
 
 class IssueTokenV1EventSpec implements BeshenceEventSpec<IssueTokenV1Event> {
@@ -14,19 +14,19 @@ class IssueTokenV1EventSpec implements BeshenceEventSpec<IssueTokenV1Event> {
   String get name => "issue_token_v1";
 
   @override
-  FutureOr<void> apply(IssueTokenV1Event event) {
-    // TODO
+  FutureOr<bool> apply(IssueTokenV1Event event) {
+    return false;
   }
 
   @override
   IssueTokenV1Event fromJson(Map<String, dynamic> json) {
-    return IssueTokenV1Event(token: json["token"] as String, scope: json["scope"] as String);
+    return IssueTokenV1Event(tokenId: json["id"] as String, scope: json["scope"] as String);
   }
 
   @override
   Map<String, dynamic> toJson(IssueTokenV1Event event) {
     return {
-      "token": event.token,
+      "id": event.tokenId,
       "scope": event.scope
     };
   }

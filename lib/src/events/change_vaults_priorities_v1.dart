@@ -13,7 +13,7 @@ class ChangeVaultsPrioritiesV1EventSpec implements BeshenceEventSpec<ChangeVault
   String get name => "change_vaults_priorities_v1";
 
   @override
-  FutureOr<void> apply(ChangeVaultsPrioritiesV1Event event) {
+  FutureOr<bool> apply(ChangeVaultsPrioritiesV1Event event) {
     // TODO: vaults belong to banks, so we cannot map vaultId to priority directly
     /*for(var priority in event.priorities.entries) {
       String vaultId = priority.key;
@@ -30,6 +30,7 @@ class ChangeVaultsPrioritiesV1EventSpec implements BeshenceEventSpec<ChangeVault
         vaultsV1Box.put(encodeKey(accountId: event.account!.id, vaultId: vaultId), newVaultV1);
       }
     }*/
+    return false;
   }
 
   @override

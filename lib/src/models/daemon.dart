@@ -181,7 +181,7 @@ class BeshenceDaemon {
             typedEvent.id = incomingEventV1.id;
             typedEvent.account = BeshenceAccount(id: incomingEventV1.accountId);
             typedEvent.chain = BeshenceChain(name: incomingEventV1.chainName, account: account);
-            await spec.apply(typedEvent);
+            bool applied = await spec.apply(typedEvent);
 
             final appliedEventV1 = EventV1(
                 id: incomingEventV1.id,
@@ -190,7 +190,7 @@ class BeshenceDaemon {
                 accountId: incomingEventV1.accountId,
                 parentId: incomingEventV1.parentId,
                 payload: incomingEventV1.payload,
-                applied: true,
+                applied: applied,
                 synced: incomingEventV1.synced
             );
 
