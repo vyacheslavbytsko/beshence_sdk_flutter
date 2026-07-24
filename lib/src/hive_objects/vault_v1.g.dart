@@ -20,7 +20,7 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
       id: fields[0] as String,
       accountId: fields[1] as String,
       bankId: fields[2] as String,
-      priority: (fields[6] as num).toInt(),
+      priority: (fields[3] as num).toInt(),
     );
   }
 
@@ -34,7 +34,7 @@ class VaultV1Adapter extends TypeAdapter<VaultV1> {
       ..write(obj.accountId)
       ..writeByte(2)
       ..write(obj.bankId)
-      ..writeByte(6)
+      ..writeByte(3)
       ..write(obj.priority);
   }
 

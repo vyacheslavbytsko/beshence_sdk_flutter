@@ -62,7 +62,7 @@ class Beshence {
     return BeshenceAccount(id: accountV1.id);
   }
 
-  static Future<BeshenceAccount> createAccount({String? id, bool initAccountEvent = true}) async {
+  static Future<BeshenceAccount> createAccount({String? id, String? oauthTokenId, bool initAccountEvent = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
     String finalId;
@@ -75,7 +75,7 @@ class Beshence {
     } else {
       finalId = id;
     }
-    final accountV1 = AccountV1(id: finalId);
+    final accountV1 = AccountV1(id: finalId, oauthTokenId: oauthTokenId);
     await accountsV1Box.put(encodeKey(accountId: finalId), accountV1);
 
     if (!accountsV1Box.containsKey(encodeKey(accountId: finalId))) {

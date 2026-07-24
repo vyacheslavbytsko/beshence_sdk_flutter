@@ -6,6 +6,8 @@ part 'account_v1.g.dart';
 class AccountV1 extends HiveObject {
   @HiveField(0)
   final String id;
+  @HiveField(1)
+  final String? oauthTokenId;
 
-  AccountV1({required this.id});
+  AccountV1({required this.id, required this.oauthTokenId});
 }

@@ -10,7 +10,7 @@ class VaultV1 extends HiveObject {
   final String accountId;
   @HiveField(2)
   final String bankId;
-  @HiveField(6)
+  @HiveField(3)
   final int priority;
 
   VaultV1({
