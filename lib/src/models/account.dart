@@ -1,4 +1,5 @@
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
+import 'package:beshence_sdk_flutter/src/events/issue_token_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 
 import '../../beshence_sdk_flutter.dart';
@@ -103,6 +104,10 @@ class BeshenceAccount {
       ..sort((a, b) => b.priority.compareTo(a.priority));
 
     return boxVaults;
+  }
+
+  Future<String> issueToken({required String token, required String scope}) async {
+    return (await requireChain("tokens")).addEvent(IssueTokenV1Event(token: token, scope: scope));
   }
 }
 

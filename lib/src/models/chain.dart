@@ -13,7 +13,7 @@ class BeshenceChain {
 
   BeshenceChain({required this.name, required this.account});
 
-  Future<void> addEvent(BeshenceEvent event, {bool applied = true}) async {
+  Future<String> addEvent(BeshenceEvent event, {bool applied = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
@@ -39,6 +39,8 @@ class BeshenceChain {
       lastEventId: eventV1.id
     );
     await chainsV1Box.put(chainV1key, newBoxChain);
+
+    return eventV1.id;
   }
 
   BeshenceEvent getEvent(String eventId) {
