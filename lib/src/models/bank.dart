@@ -47,7 +47,7 @@ class BeshenceBank {
     }
   }
 
-  Future<List<String>> createVault(String name) async {
+  Future<String> createVault(String name) async {
     try {
       String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
 
@@ -105,11 +105,10 @@ class BeshenceBank {
         final String encodedPayload = event["payload"];
         final decodedPayload = jsonDecode(utf8.decode(base64.decode(encodedPayload)));
         final String eventName = decodedPayload["n"];
-        final encodedEvent = decodedPayload["e"];
-        final decodedEvent = jsonDecode(base64.encode(utf8.encode(jsonEncode(encodedEvent))));
+        final eventJson = decodedPayload["e"];
 
         if(eventName == "init_account") {
-          accountId = decodedEvent["id"];
+          accountId = eventJson["id"];
           break;
         }
       }
@@ -131,7 +130,7 @@ class BeshenceBank {
 
     try {
       var response = await http.get(url, headers: newHeaders);
-      print(response.body);
+      //print(response.body);
       var jsonResponse = jsonDecode(response.body);
       if (jsonResponse["err"] != "UNAUTHORIZED") return response;
 

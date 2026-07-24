@@ -56,7 +56,7 @@ class BeshenceDaemon {
 
         // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
         while(localLastSyncedEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.synced == false) {
-          print("while is true with $localLastSyncedEventId in chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
+          //print("while is true with $localLastSyncedEventId in chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
           localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
         }
 
@@ -82,13 +82,13 @@ class BeshenceDaemon {
                 '${cursor != null ? '?after=$cursor' : ''}',
           );
 
-          print(uri);
+          //print(uri);
 
           final response = await onlineVault.bank.authenticatedHttpGet(uri);
 
           final json = jsonDecode(response.body);
 
-          print(json);
+          //print(json);
 
           if (json["err"] != "0") {
             if(json["err"] == "PARENT_EVENT_NOT_FOUND") {
@@ -102,7 +102,7 @@ class BeshenceDaemon {
 
           final List<dynamic> events = json["events"];
 
-          print(events);
+          //print(events);
 
           if (events.isEmpty) {
             break;
@@ -142,7 +142,7 @@ class BeshenceDaemon {
 
               print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
 
-              print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
+              //print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
 
               EventV1 updatedEventV1 = EventV1(
                   id: eventV1withIncomingParentId.id,
@@ -155,13 +155,13 @@ class BeshenceDaemon {
                   synced: eventV1withIncomingParentId.synced // should be false ig
               );
 
-              print("so now this event (${eventV1withIncomingParentId.id}) has these parent: ${updatedEventV1.parentId}");
+              print("so now this event (${eventV1withIncomingParentId.id}) has this parent: ${updatedEventV1.parentId}");
 
               await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
 
-              print("just to check it: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
+              //print("just to check it: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
             } on StateError {
-              print("we didn't find event with this exact parent id as incoming event");
+              //print("we didn't find event with this exact parent id as incoming event");
               // we didn't find this event, moving on
             }
 
