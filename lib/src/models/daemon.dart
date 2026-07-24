@@ -60,7 +60,7 @@ class BeshenceDaemon {
           localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
         }
 
-        String? remoteLastEventId = await chain.remote(onlineVault).remoteLastEventId;
+        String? remoteLastEventId = await chain.inVault(onlineVault).remoteLastEventId;
 
         print("localLastEventId: $localLastEventId");
         print("localLastSyncedEventId: $localLastSyncedEventId");
@@ -216,7 +216,7 @@ class BeshenceDaemon {
 
       for(BeshenceChain chain in account.chains) {
         try {
-          String? remoteLastEventId = await chain.remote(vault).remoteLastEventId;
+          String? remoteLastEventId = await chain.inVault(vault).remoteLastEventId;
           String? localLastEventId = chain.lastEvent?.id;
 
           print("localLastEventId: $localLastEventId");
@@ -230,7 +230,7 @@ class BeshenceDaemon {
             )).first;
             print("childEvent ${childEventV1.id}");
             BeshenceEvent childEvent = chain.getEvent(childEventV1.id);
-            chain.remote(vault).pushEvent(childEvent);
+            chain.inVault(vault).pushEvent(childEvent);
           } else {
             print("No events to push");
           }

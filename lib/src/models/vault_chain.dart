@@ -4,15 +4,32 @@ import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/event_v1.dart';
 import '../misc.dart';
 
-class BeshenceRemoteChain {
+class BeshenceVaultChain {
   BeshenceChain chain;
   BeshenceVault vault;
 
-  BeshenceRemoteChain({required this.chain, required this.vault});
+  BeshenceVaultChain({required this.chain, required this.vault});
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is BeshenceVaultChain &&
+        other.chain == chain &&
+        other.vault == vault;
+  }
+
+  @override
+  int get hashCode => Object.hash(chain, vault);
 
   Future<String?> get remoteLastEventId async {
     String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
     if(onlineBankApiUrl == null) throw Exception("offline");
+
+    List<BeshenceVaultChain> chains = await vault.chains;
+    if(!chains.contains(BeshenceVaultChain(chain: chain, vault: vault))) {
+
+    }
 
     var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
     var response = await vault.bank.authenticatedHttpGet(url,

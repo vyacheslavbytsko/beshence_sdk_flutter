@@ -13,6 +13,18 @@ class BeshenceChain {
 
   BeshenceChain({required this.name, required this.account});
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is BeshenceChain &&
+        other.name == name &&
+        other.account == account;
+  }
+
+  @override
+  int get hashCode => Object.hash(name, account);
+
   Future<String> addEvent(BeshenceEvent event, {bool applied = true}) async {
     if(!initialized) throw Exception("Beshence not initialized");
 
@@ -63,5 +75,5 @@ class BeshenceChain {
     return eventId == null ? null : getEvent(eventId);
   }
 
-  BeshenceRemoteChain remote(BeshenceVault vault) => BeshenceRemoteChain(vault: vault, chain: this);
+  BeshenceVaultChain inVault(BeshenceVault vault) => BeshenceVaultChain(vault: vault, chain: this);
 }

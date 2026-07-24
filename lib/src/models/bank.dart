@@ -11,6 +11,17 @@ class BeshenceBank {
 
   BeshenceBank({required this.id});
 
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is BeshenceBank &&
+        other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
+
   Future<String?> get onlineApiUrl async {
     try {
       return (await Beshence.pingBank(bankId: id)).apiUrl;

@@ -12,11 +12,12 @@ class BeshenceAccount {
   BeshenceAccount({required this.id});
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BeshenceAccount &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is BeshenceAccount &&
+        other.id == id;
+  }
 
   @override
   int get hashCode => id.hashCode;
