@@ -106,8 +106,8 @@ class BeshenceAccount {
     return boxVaults;
   }
 
-  Future<String> issueToken({required String token, required String scope}) async {
-    return (await requireChain("tokens")).addEvent(IssueTokenV1Event(tokenId: token, scope: scope));
+  Future<String> issueToken({required String tokenId, required String scope}) async {
+    return (await requireChain("tokens")).addEvent(IssueTokenV1Event(tokenId: tokenId, scope: scope));
   }
 }
 
