@@ -23,7 +23,7 @@ class BeshenceBank {
     try {
       String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
 
-      var vaultsUrl = Uri.parse('$bankApiUrl/vault');
+      var vaultsUrl = Uri.parse('$bankApiUrl/vaults');
       var vaultsResponse = await authenticatedHttpGet(vaultsUrl,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
@@ -61,7 +61,6 @@ class BeshenceBank {
           })
       );
       var vaultJson = jsonDecode(vaultResponse.body);
-      print(vaultJson);
       if (vaultJson["err"] == "0") {
         if (vaultJson is! Map<String, dynamic>) {
           throw StateError('Invalid response format');
@@ -72,6 +71,51 @@ class BeshenceBank {
         throw StateError('Request failed with err ${vaultJson["err"]} and error ${vaultJson["errmsg"]}.');
       }
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<String?> getAccountIdAttachedToVault(String vaultId) async {
+    try {
+      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
+
+      var chainsUrl = Uri.parse("$bankApiUrl/vault/$vaultId/chains");
+      var chainsResponse = await authenticatedHttpGet(chainsUrl);
+      var chainsJson = jsonDecode(chainsResponse.body);
+      if(chainsJson["err"] == "0") {
+        List<dynamic> chains = List<String>.from((chainsJson["chains"] as List)
+            .map((e) => e["name"]));
+        if(!chains.contains("main")) return null;
+      } else {
+        throw StateError('Request failed with err ${chainsJson["err"]} and error ${chainsJson["errmsg"]}.');
+      }
+
+      var eventsUrl = Uri.parse("$bankApiUrl/vault/$vaultId/chain/main/events");
+      var eventsResponse = await authenticatedHttpGet(eventsUrl);
+      var eventsJson = jsonDecode(eventsResponse.body);
+      if(eventsJson["err"] == "0") {
+
+      } else {
+        throw StateError('Request failed with err ${eventsJson["err"]} and error ${eventsJson["errmsg"]}.');
+      }
+
+      String? accountId = "";
+
+      for(Map<String, dynamic> event in eventsJson["events"]) {
+        final String encodedPayload = event["payload"];
+        final decodedPayload = jsonDecode(utf8.decode(base64.decode(encodedPayload)));
+        final String eventName = decodedPayload["n"];
+        final encodedEvent = decodedPayload["e"];
+        final decodedEvent = jsonDecode(base64.encode(utf8.encode(jsonEncode(encodedEvent))));
+
+        if(eventName == "init_account") {
+          accountId = decodedEvent["id"];
+          break;
+        }
+      }
+
+      return accountId;
+    } catch(e) {
       rethrow;
     }
   }

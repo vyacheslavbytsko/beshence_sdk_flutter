@@ -78,7 +78,7 @@ class BeshenceDaemon {
             '$onlineBankApiUrl'
                 '/vault/${onlineVault.id}'
                 '/chain/${chain.name}'
-                '/event'
+                '/events'
                 '${cursor != null ? '?after=$cursor' : ''}',
           );
 
