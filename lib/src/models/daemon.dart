@@ -39,12 +39,11 @@ class BeshenceDaemon {
     BeshenceBank? onlineBank;
     String? onlineBankApiUrl;
     for (BeshenceVault vault in account.vaults) {
-      if(onlineVault != null) break;
-      List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
-      if(onlineBankApiUrls.isNotEmpty) {
+      onlineBankApiUrl = await vault.bank.onlineApiUrl;
+      if(onlineBankApiUrl != null) {
         onlineVault = vault;
         onlineBank = vault.bank;
-        onlineBankApiUrl = onlineBankApiUrls.first;
+        break;
       }
     }
 
@@ -57,7 +56,7 @@ class BeshenceDaemon {
 
         // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
         while(localLastSyncedEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.synced == false) {
-          print("while сработал на $localLastSyncedEventId для chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
+          print("while is true with $localLastSyncedEventId in chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
           localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
         }
 
@@ -212,8 +211,8 @@ class BeshenceDaemon {
 
   Future<void> _pushOne() async {
     for(BeshenceVault vault in account.vaults) {
-      List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
-      if(onlineBankApiUrls.isEmpty) break;
+      String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
+      if(onlineBankApiUrl == null) break;
 
       for(BeshenceChain chain in account.chains) {
         try {

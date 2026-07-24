@@ -11,10 +11,8 @@ class BeshenceRemoteChain {
   BeshenceRemoteChain({required this.chain, required this.vault});
 
   Future<String?> get remoteLastEventId async {
-    List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
-    if(onlineBankApiUrls.isEmpty) throw Exception("offline");
-
-    String onlineBankApiUrl = onlineBankApiUrls.first;
+    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
+    if(onlineBankApiUrl == null) throw Exception("offline");
 
     var url = Uri.parse('$onlineBankApiUrl/api/vault/${vault.id}/chain/${chain.name}/event/last');
     var response = await vault.bank.authenticatedHttpGet(url,
@@ -38,10 +36,8 @@ class BeshenceRemoteChain {
   }
 
   Future<void> pushEvent(BeshenceEvent event) async {
-    List<String> onlineBankApiUrls = await vault.bank.onlineApiUrls;
-    if(onlineBankApiUrls.isEmpty) throw Exception("offline");
-
-    String onlineBankApiUrl = onlineBankApiUrls.first;
+    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
+    if(onlineBankApiUrl == null) throw Exception("offline");
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
     Map<String, dynamic> json = {
@@ -81,4 +77,12 @@ class BeshenceRemoteChain {
     );
     await eventsV1Box.put(eventV1Key, newEventV1);
   }
+}
+
+class BeshenceRemoteVault {
+  final String id;
+  final BeshenceBank bank;
+  final String name;
+
+  BeshenceRemoteVault({required this.id, required this.bank, required this.name});
 }

@@ -11,16 +11,12 @@ class BeshenceBank {
 
   BeshenceBank({required this.id});
 
-  Future<List<String>> get onlineApiUrls async {
-    BankV1? bankV1 = banksV1Box.get(encodeKey(bankId: id));
-    List<String> onlineUrls = [];
-    for(String bankApiUrl in bankV1!.apiUrls) {
-      BeshenceBankPingResponse response = await Beshence.pingBank(bankId: id);
-      if(response.bankId == id) {
-        onlineUrls.add(bankApiUrl);
-      }
+  Future<String?> get onlineApiUrl async {
+    try {
+      return (await Beshence.pingBank(bankId: id)).apiUrl;
+    } catch(e) {
+      return null;
     }
-    return onlineUrls;
   }
 
   Future<List<BeshenceRemoteVault>> getVaults() async {
@@ -183,12 +179,4 @@ class BeshenceBankLoginResponse {
   final String accessToken;
 
   BeshenceBankLoginResponse({required this.refreshToken, required this.accessToken});
-}
-
-class BeshenceRemoteVault {
-  final String id;
-  final BeshenceBank bank;
-  final String name;
-
-  BeshenceRemoteVault({required this.id, required this.bank, required this.name});
 }
