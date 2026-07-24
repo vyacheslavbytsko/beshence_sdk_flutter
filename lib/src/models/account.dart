@@ -1,5 +1,6 @@
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/issue_token_v1.dart';
+import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
 
 import '../../beshence_sdk_flutter.dart';
@@ -80,7 +81,12 @@ class BeshenceAccount {
     }
 
     if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
-      throw Exception("could not find this bank");
+      final BankV1 bankV1 = BankV1(
+          id: bankId,
+          apiUrls: [],
+          accessToken: null,
+          refreshToken: null);
+      await banksV1Box.put(encodeKey(bankId: bankId), bankV1);
     }
 
     final VaultV1 newVault = VaultV1(
