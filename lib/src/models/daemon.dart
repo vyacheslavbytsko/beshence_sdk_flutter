@@ -84,7 +84,7 @@ class BeshenceDaemon {
 
           //print(uri);
 
-          final response = await onlineVault.bank.authenticatedHttpGet(uri);
+          final response = await onlineVault.bank.authenticatedHttpGet(vault: onlineVault, url: uri);
 
           final json = jsonDecode(response.body);
 

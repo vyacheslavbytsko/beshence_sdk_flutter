@@ -31,7 +31,7 @@ class BeshenceVault {
     String bankApiUrl = (await Beshence.pingBank(bankId: bank.id)).apiUrl;
 
     var chainsUrl = Uri.parse("$bankApiUrl/vault/$id/chains");
-    var chainsResponse = await bank.authenticatedHttpGet(chainsUrl);
+    var chainsResponse = await bank.authenticatedHttpGet(vault: this, url: chainsUrl);
     var chainsJson = jsonDecode(chainsResponse.body);
     if(chainsJson["err"] == "0") {
       List<BeshenceVaultChain> chains = List<BeshenceVaultChain>.from((chainsJson["chains"] as List)

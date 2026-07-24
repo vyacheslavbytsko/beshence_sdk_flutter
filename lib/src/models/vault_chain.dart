@@ -29,7 +29,9 @@ class BeshenceVaultChain {
     List<BeshenceVaultChain> chains = await vault.chains;
     if(!chains.contains(BeshenceVaultChain(chain: chain, vault: vault))) {
       var createChainUrl = Uri.parse("$onlineBankApiUrl/vault/${vault.id}/chain");
-      var createChainResponse = await vault.bank.authenticatedHttpPost(createChainUrl,
+      var createChainResponse = await vault.bank.authenticatedHttpPost(
+          vault: vault,
+          url: createChainUrl,
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -51,7 +53,9 @@ class BeshenceVaultChain {
     await ensureExists();
 
     var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
-    var response = await vault.bank.authenticatedHttpGet(url,
+    var response = await vault.bank.authenticatedHttpGet(
+      vault: vault,
+      url: url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -85,7 +89,9 @@ class BeshenceVaultChain {
     var payload = base64.encode(utf8.encode(jsonEncode(json)));
 
     var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event');
-    var response = await vault.bank.authenticatedHttpPost(url,
+    var response = await vault.bank.authenticatedHttpPost(
+      vault: vault,
+      url: url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
