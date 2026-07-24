@@ -76,7 +76,7 @@ class BeshenceDaemon {
         while (true) {
           Uri uri = Uri.parse(
             '$onlineBankApiUrl'
-                '/api/vault/${onlineVault.id}'
+                '/vault/${onlineVault.id}'
                 '/chain/${chain.name}'
                 '/event'
                 '${cursor != null ? '?after=$cursor' : ''}',

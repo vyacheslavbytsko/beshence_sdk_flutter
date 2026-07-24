@@ -14,7 +14,7 @@ class BeshenceRemoteChain {
     String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
     if(onlineBankApiUrl == null) throw Exception("offline");
 
-    var url = Uri.parse('$onlineBankApiUrl/api/vault/${vault.id}/chain/${chain.name}/event/last');
+    var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
     var response = await vault.bank.authenticatedHttpGet(url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
@@ -46,7 +46,7 @@ class BeshenceRemoteChain {
     };
     var payload = base64.encode(utf8.encode(jsonEncode(json)));
 
-    var url = Uri.parse('$onlineBankApiUrl/api/vault/${vault.id}/chain/${chain.name}/event');
+    var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event');
     var response = await vault.bank.authenticatedHttpPost(url,
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',

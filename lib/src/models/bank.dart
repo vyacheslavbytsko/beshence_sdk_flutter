@@ -87,11 +87,12 @@ class BeshenceBank {
 
     try {
       var response = await http.get(url, headers: newHeaders);
+      print(response.body);
       var jsonResponse = jsonDecode(response.body);
       if (jsonResponse["err"] != "UNAUTHORIZED") return response;
 
       try {
-        var authUrl = Uri.parse('${url.origin}/api/auth/refresh');
+        var authUrl = Uri.parse('${await onlineApiUrl}/auth/refresh');
         var response = await http.get(authUrl,
             headers: <String, String>{
               'Authorization': 'Bearer $refreshToken',
@@ -133,7 +134,7 @@ class BeshenceBank {
       if (jsonResponse["err"] != "UNAUTHORIZED") return response;
 
       try {
-        var authUrl = Uri.parse('${url.origin}/api/auth/refresh');
+        var authUrl = Uri.parse('${await onlineApiUrl}/auth/refresh');
         var response = await http.get(authUrl,
             headers: <String, String>{
               'Authorization': 'Bearer $refreshToken',
