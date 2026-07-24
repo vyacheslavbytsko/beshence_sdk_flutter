@@ -31,7 +31,7 @@ class BeshenceBank {
     }
   }
 
-  Future<List<BeshenceRemoteVault>> getVaults(BeshenceAccount account) async {
+  Future<List<BeshenceRemoteVault>> getVaults() async {
     try {
       String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
 
