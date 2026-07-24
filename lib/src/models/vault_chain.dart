@@ -22,7 +22,7 @@ class BeshenceVaultChain {
   @override
   int get hashCode => Object.hash(chain, vault);
 
-  Future<String?> get remoteLastEventId async {
+  Future<void> ensureExists() async {
     String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
     if(onlineBankApiUrl == null) throw Exception("offline");
 
@@ -30,18 +30,25 @@ class BeshenceVaultChain {
     if(!chains.contains(BeshenceVaultChain(chain: chain, vault: vault))) {
       var createChainUrl = Uri.parse("$onlineBankApiUrl/vault/${vault.id}/chain");
       var createChainResponse = await vault.bank.authenticatedHttpPost(createChainUrl,
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          "name": chain.name
-        })
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode({
+            "name": chain.name
+          })
       );
       var createChainJson = jsonDecode(createChainResponse.body);
       if(createChainJson["err"] != "0") {
         throw StateError('Request failed with err ${createChainJson["err"]} and error ${createChainJson["errmsg"]}.');
       }
     }
+}
+
+  Future<String?> get remoteLastEventId async {
+    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
+    if(onlineBankApiUrl == null) throw Exception("offline");
+
+    await ensureExists();
 
     var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
     var response = await vault.bank.authenticatedHttpGet(url,
@@ -68,7 +75,7 @@ class BeshenceVaultChain {
     String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
     if(onlineBankApiUrl == null) throw Exception("offline");
 
-
+    await ensureExists();
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
     Map<String, dynamic> json = {
