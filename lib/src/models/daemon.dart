@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:beshence_sdk_flutter/src/misc.dart';
+import 'package:beshence_sdk_flutter/src/models/connection.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/chain_v1.dart';
@@ -49,6 +51,9 @@ class BeshenceDaemon {
 
     if(onlineVault == null || onlineBank == null || onlineBankApiUrl == null) return;
 
+    BeshenceBankConnection connection = BeshenceBankConnection(bank: onlineBank);
+    await connection.connect();
+    connection.sendData(jsonEncode({"id": Uuid().v4(), "type": "GET", "path": "/testwebrtc"}));
     for(BeshenceChain chain in account.chains) {
       try {
         String? localLastEventId = chain.lastEvent?.id;
@@ -62,12 +67,12 @@ class BeshenceDaemon {
 
         String? remoteLastEventId = await chain.inVault(onlineVault).remoteLastEventId;
 
-        print("localLastEventId: $localLastEventId");
-        print("localLastSyncedEventId: $localLastSyncedEventId");
-        print("remoteLastEventId: $remoteLastEventId");
+        //print("localLastEventId: $localLastEventId");
+        //print("localLastSyncedEventId: $localLastSyncedEventId");
+        //print("remoteLastEventId: $remoteLastEventId");
 
         if (localLastSyncedEventId == remoteLastEventId) {
-          print("No events to pull");
+          //print("No events to pull");
           continue;
         }
 
@@ -125,7 +130,7 @@ class BeshenceDaemon {
               synced: true
             );
 
-            print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.parentId}, ${incomingEventV1.synced}");
+            //print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.parentId}, ${incomingEventV1.synced}");
 
             // before we add this event, maybe we have event that rely on this parent_id temporarily.
             // or even permanently, which is an error.
@@ -140,7 +145,7 @@ class BeshenceDaemon {
                       e.parentId == raw["parent_id"] && e.synced == false
               )).first;
 
-              print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
+              //print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
 
               //print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
 
@@ -155,7 +160,7 @@ class BeshenceDaemon {
                   synced: eventV1withIncomingParentId.synced // should be false ig
               );
 
-              print("so now this event (${eventV1withIncomingParentId.id}) has this parent: ${updatedEventV1.parentId}");
+              //print("so now this event (${eventV1withIncomingParentId.id}) has this parent: ${updatedEventV1.parentId}");
 
               await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
 
@@ -219,8 +224,8 @@ class BeshenceDaemon {
           String? remoteLastEventId = await chain.inVault(vault).remoteLastEventId;
           String? localLastEventId = chain.lastEvent?.id;
 
-          print("localLastEventId: $localLastEventId");
-          print("remoteLastEventId: $remoteLastEventId");
+          //print("localLastEventId: $localLastEventId");
+          //print("remoteLastEventId: $remoteLastEventId");
 
           if(localLastEventId != remoteLastEventId) {
             EventV1 childEventV1 = eventsV1Box.values.where((e) => (
@@ -228,11 +233,11 @@ class BeshenceDaemon {
                     e.accountId == account.id &&
                     e.parentId == remoteLastEventId
             )).first;
-            print("childEvent ${childEventV1.id}");
+            //print("childEvent ${childEventV1.id}");
             BeshenceEvent childEvent = chain.getEvent(childEventV1.id);
             chain.inVault(vault).pushEvent(childEvent);
           } else {
-            print("No events to push");
+            //print("No events to push");
           }
         } catch(e) {
           // rethrow;
