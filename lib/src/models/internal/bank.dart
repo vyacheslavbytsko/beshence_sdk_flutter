@@ -259,7 +259,7 @@ class BBIPeerConnection {
     // create WebSocket connection
 
     final String sessionId = Uuid().v4();
-    final wsUri = Uri.parse('wss://gateway.beshence.com/api/bank/$bankId/ws?role=client&session_id=$sessionId',);
+    final wsUri = Uri.parse('wss://gateway.beshence.com:443/api/bank/$bankId/ws?role=client&session_id=$sessionId');
     _websocket = WebSocketChannel.connect(wsUri);
     _websocket.stream.listen((message) async {
       //print("got message! $message");
