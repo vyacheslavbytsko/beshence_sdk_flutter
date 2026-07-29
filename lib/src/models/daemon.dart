@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:beshence_sdk_flutter/src/misc.dart';
-import 'package:beshence_sdk_flutter/src/models/connection.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/chain_v1.dart';
@@ -37,188 +35,173 @@ class BeshenceDaemon {
   }
 
   Future<void> _pullMany() async {
-    BeshenceVault? onlineVault;
-    BeshenceBank? onlineBank;
-    String? onlineBankApiUrl;
     for (BeshenceVault vault in account.vaults) {
-      onlineBankApiUrl = await vault.bank.onlineApiUrl;
-      if(onlineBankApiUrl != null) {
-        onlineVault = vault;
-        onlineBank = vault.bank;
-        break;
-      }
-    }
-
-    if(onlineVault == null || onlineBank == null || onlineBankApiUrl == null) return;
-
-    BeshenceBankConnection connection = BeshenceBankConnection(bank: onlineBank);
-    await connection.connect();
-    connection.sendData(jsonEncode({"id": Uuid().v4(), "type": "GET", "path": "/testwebrtc"}));
-    for(BeshenceChain chain in account.chains) {
       try {
-        String? localLastEventId = chain.lastEvent?.id;
-        String? localLastSyncedEventId = localLastEventId;
+        /*
+        BeshenceBankConnection connection = BeshenceBankConnection(bank: onlineBank);
+        await connection.connect();
+        connection.sendData(jsonEncode({"id": Uuid().v4(), "type": "GET", "path": "/testwebrtc"}));
+        */
 
-        // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
-        while(localLastSyncedEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.synced == false) {
-          //print("while is true with $localLastSyncedEventId in chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
-          localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
-        }
+        for(BeshenceChain chain in account.chains) {
+          String? localLastEventId = chain.lastEvent?.id;
+          String? localLastSyncedEventId = localLastEventId;
 
-        String? remoteLastEventId = await chain.inVault(onlineVault).remoteLastEventId;
+          // seeking last event that was actually sent to vaults. localLastEventId is also for local-only events!
+          while(localLastSyncedEventId != null && eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.synced == false) {
+            //print("while is true with $localLastSyncedEventId in chain ${chain.name}. ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))!.parentId}");
+            localLastSyncedEventId = eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: localLastSyncedEventId))?.parentId;
+          }
 
-        //print("localLastEventId: $localLastEventId");
-        //print("localLastSyncedEventId: $localLastSyncedEventId");
-        //print("remoteLastEventId: $remoteLastEventId");
+          String? remoteLastEventId = await chain.inVault(vault).remoteLastEventId;
 
-        if (localLastSyncedEventId == remoteLastEventId) {
-          //print("No events to pull");
-          continue;
-        }
+          //print("localLastEventId: $localLastEventId");
+          //print("localLastSyncedEventId: $localLastSyncedEventId");
+          //print("remoteLastEventId: $remoteLastEventId");
 
-        String? cursor = localLastSyncedEventId;
+          if (localLastSyncedEventId == remoteLastEventId) {
+            //print("No events to pull");
+            continue;
+          }
 
-        while (true) {
-          Uri uri = Uri.parse(
-            '$onlineBankApiUrl'
-                '/vault/${onlineVault.id}'
+          String? cursor = localLastSyncedEventId;
+
+          while (true) {
+            String path = '/vault/${vault.id}'
                 '/chain/${chain.name}'
                 '/events'
-                '${cursor != null ? '?after=$cursor' : ''}',
-          );
+                '${cursor != null ? '?after=$cursor' : ''}';
 
-          //print(uri);
+            //print(uri);
 
-          final response = await onlineVault.bank.authenticatedHttpGet(vault: onlineVault, url: uri);
+            final response = await vault.bank.internal.get(vault: vault, path: path);
 
-          final json = jsonDecode(response.body);
+            final json = jsonDecode(response.body);
 
-          //print(json);
+            //print(json);
 
-          if (json["err"] != "0") {
-            if(json["err"] == "PARENT_EVENT_NOT_FOUND") {
-              // our local chain is fresher than remote chain so wo don't have anything to pull
+            if (json["err"] != "0") {
+              if(json["err"] == "PARENT_EVENT_NOT_FOUND") {
+                // our local chain is fresher than remote chain so wo don't have anything to pull
+                break;
+              }
+              throw Exception(
+                'Failed to pull events: ${json["errmsg"]}',
+              );
+            }
+
+            final List<dynamic> events = json["events"];
+
+            //print(events);
+
+            if (events.isEmpty) {
               break;
             }
-            throw Exception(
-              'Failed to pull events: ${json["errmsg"]}',
-            );
-          }
 
-          final List<dynamic> events = json["events"];
+            for (final raw in events) {
+              final String encodedPayload = raw["payload"];
+              final decodedPayload = jsonDecode(utf8.decode(base64.decode(encodedPayload)));
+              final String eventName = decodedPayload["n"];
+              final dynamic eventPayload = decodedPayload["e"];
 
-          //print(events);
-
-          if (events.isEmpty) {
-            break;
-          }
-
-          for (final raw in events) {
-            final String encodedPayload = raw["payload"];
-            final decodedPayload = jsonDecode(utf8.decode(base64.decode(encodedPayload)));
-            final String eventName = decodedPayload["n"];
-            final dynamic eventPayload = decodedPayload["e"];
-
-            final incomingEventV1 = EventV1(
-              id: raw["id"],
-              name: eventName,
-              chainName: chain.name,
-              accountId: account.id,
-              parentId: raw["parent_id"],
-              payload: base64.encode(utf8.encode(jsonEncode(eventPayload))),
-              applied: false,
-              synced: true
-            );
-
-            //print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.parentId}, ${incomingEventV1.synced}");
-
-            // before we add this event, maybe we have event that rely on this parent_id temporarily.
-            // or even permanently, which is an error.
-            // we should check it and change its parent id to newly coming event id
-
-            // TODO: handle error when some event's permParentId is the same as coming event parent id
-
-            try {
-              EventV1 eventV1withIncomingParentId = eventsV1Box.values.where((e) => (
-                  e.chainName == chain.name &&
-                      e.accountId == account.id &&
-                      e.parentId == raw["parent_id"] && e.synced == false
-              )).first;
-
-              //print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
-
-              //print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
-
-              EventV1 updatedEventV1 = EventV1(
-                  id: eventV1withIncomingParentId.id,
-                  name: eventV1withIncomingParentId.name,
-                  chainName: eventV1withIncomingParentId.chainName,
-                  accountId: eventV1withIncomingParentId.accountId,
-                  parentId: incomingEventV1.id,
-                  payload: eventV1withIncomingParentId.payload,
-                  applied: eventV1withIncomingParentId.applied,
-                  synced: eventV1withIncomingParentId.synced // should be false ig
+              final incomingEventV1 = EventV1(
+                  id: raw["id"],
+                  name: eventName,
+                  chainName: chain.name,
+                  accountId: account.id,
+                  parentId: raw["parent_id"],
+                  payload: base64.encode(utf8.encode(jsonEncode(eventPayload))),
+                  applied: false,
+                  synced: true
               );
 
-              //print("so now this event (${eventV1withIncomingParentId.id}) has this parent: ${updatedEventV1.parentId}");
+              //print("incoming event! ${incomingEventV1.id}, ${incomingEventV1.parentId}, ${incomingEventV1.synced}");
 
-              await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
+              // before we add this event, maybe we have event that rely on this parent_id temporarily.
+              // or even permanently, which is an error.
+              // we should check it and change its parent id to newly coming event id
 
-              //print("just to check it: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
-            } on StateError {
-              //print("we didn't find event with this exact parent id as incoming event");
-              // we didn't find this event, moving on
+              // TODO: handle error when some event's permParentId is the same as coming event parent id
+
+              try {
+                EventV1 eventV1withIncomingParentId = eventsV1Box.values.where((e) => (
+                    e.chainName == chain.name &&
+                        e.accountId == account.id &&
+                        e.parentId == raw["parent_id"] && e.synced == false
+                )).first;
+
+                //print("we found event with this exact parent id as incoming event: ${eventV1withIncomingParentId.id} and it was not synced");
+
+                //print("check 1: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
+
+                EventV1 updatedEventV1 = EventV1(
+                    id: eventV1withIncomingParentId.id,
+                    name: eventV1withIncomingParentId.name,
+                    chainName: eventV1withIncomingParentId.chainName,
+                    accountId: eventV1withIncomingParentId.accountId,
+                    parentId: incomingEventV1.id,
+                    payload: eventV1withIncomingParentId.payload,
+                    applied: eventV1withIncomingParentId.applied,
+                    synced: eventV1withIncomingParentId.synced // should be false ig
+                );
+
+                //print("so now this event (${eventV1withIncomingParentId.id}) has this parent: ${updatedEventV1.parentId}");
+
+                await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id), updatedEventV1);
+
+                //print("just to check it: ${eventsV1Box.get(encodeKey(accountId: account.id, chainName: chain.name, eventId: eventV1withIncomingParentId.id))?.id}");
+              } on StateError {
+                //print("we didn't find event with this exact parent id as incoming event");
+                // we didn't find this event, moving on
+              }
+
+              await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), incomingEventV1);
+
+              final chainV1key = encodeKey(accountId: account.id, chainName: chain.name);
+              final chainV1 = chainsV1Box.get(chainV1key)!;
+              final newBoxChain = ChainV1(
+                  name: chainV1.name,
+                  accountId: chainV1.accountId,
+                  lastEventId: chainV1.lastEventId == incomingEventV1.parentId ? incomingEventV1.id : chainV1.lastEventId
+              );
+              await chainsV1Box.put(chainV1key, newBoxChain);
+
+              final spec = eventsRegistry.specForName(eventName);
+              final typedEvent = spec.fromJson(eventPayload);
+              typedEvent.id = incomingEventV1.id;
+              typedEvent.account = BeshenceAccount(id: incomingEventV1.accountId);
+              typedEvent.chain = BeshenceChain(name: incomingEventV1.chainName, account: account);
+              bool applied = await spec.apply(typedEvent);
+
+              final appliedEventV1 = EventV1(
+                  id: incomingEventV1.id,
+                  name: incomingEventV1.name,
+                  chainName: incomingEventV1.chainName,
+                  accountId: incomingEventV1.accountId,
+                  parentId: incomingEventV1.parentId,
+                  payload: incomingEventV1.payload,
+                  applied: applied,
+                  synced: incomingEventV1.synced
+              );
+
+              await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), appliedEventV1);
+
+              cursor = incomingEventV1.id;
             }
 
-            await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), incomingEventV1);
-
-            final chainV1key = encodeKey(accountId: account.id, chainName: chain.name);
-            final chainV1 = chainsV1Box.get(chainV1key)!;
-            final newBoxChain = ChainV1(
-                name: chainV1.name,
-                accountId: chainV1.accountId,
-                lastEventId: chainV1.lastEventId == incomingEventV1.parentId ? incomingEventV1.id : chainV1.lastEventId
-            );
-            await chainsV1Box.put(chainV1key, newBoxChain);
-
-            final spec = eventsRegistry.specForName(eventName);
-            final typedEvent = spec.fromJson(eventPayload);
-            typedEvent.id = incomingEventV1.id;
-            typedEvent.account = BeshenceAccount(id: incomingEventV1.accountId);
-            typedEvent.chain = BeshenceChain(name: incomingEventV1.chainName, account: account);
-            bool applied = await spec.apply(typedEvent);
-
-            final appliedEventV1 = EventV1(
-                id: incomingEventV1.id,
-                name: incomingEventV1.name,
-                chainName: incomingEventV1.chainName,
-                accountId: incomingEventV1.accountId,
-                parentId: incomingEventV1.parentId,
-                payload: incomingEventV1.payload,
-                applied: applied,
-                synced: incomingEventV1.synced
-            );
-
-            await eventsV1Box.put(encodeKey(accountId: account.id, chainName: chain.name, eventId: incomingEventV1.id), appliedEventV1);
-
-            cursor = incomingEventV1.id;
-          }
-
-          if (events.length < 100) {
-            break;
+            if (events.length < 100) {
+              break;
+            }
           }
         }
       } catch(e) {
-        rethrow;
+        continue;
       }
     }
   }
 
   Future<void> _pushOne() async {
     for(BeshenceVault vault in account.vaults) {
-      String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
-      if(onlineBankApiUrl == null) break;
-
       for(BeshenceChain chain in account.chains) {
         try {
           String? remoteLastEventId = await chain.inVault(vault).remoteLastEventId;

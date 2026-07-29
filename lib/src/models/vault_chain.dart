@@ -23,15 +23,11 @@ class BeshenceVaultChain {
   int get hashCode => Object.hash(chain, vault);
 
   Future<void> ensureExists() async {
-    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
-    if(onlineBankApiUrl == null) throw Exception("offline");
-
     List<BeshenceVaultChain> chains = await vault.chains;
     if(!chains.contains(BeshenceVaultChain(chain: chain, vault: vault))) {
-      var createChainUrl = Uri.parse("$onlineBankApiUrl/vault/${vault.id}/chain");
-      var createChainResponse = await vault.bank.authenticatedHttpPost(
+      var createChainResponse = await vault.bank.internal.post(
           vault: vault,
-          url: createChainUrl,
+          path: "/vault/${vault.id}/chain",
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -47,15 +43,11 @@ class BeshenceVaultChain {
 }
 
   Future<String?> get remoteLastEventId async {
-    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
-    if(onlineBankApiUrl == null) throw Exception("offline");
-
     await ensureExists();
 
-    var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event/last');
-    var response = await vault.bank.authenticatedHttpGet(
+    var response = await vault.bank.internal.get(
       vault: vault,
-      url: url,
+      path: "/vault/${vault.id}/chain/${chain.name}/event/last",
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
@@ -76,9 +68,6 @@ class BeshenceVaultChain {
   }
 
   Future<void> pushEvent(BeshenceEvent event) async {
-    String? onlineBankApiUrl = await vault.bank.onlineApiUrl;
-    if(onlineBankApiUrl == null) throw Exception("offline");
-
     await ensureExists();
 
     final mapper = eventsRegistry.specForType(event.runtimeType);
@@ -88,10 +77,9 @@ class BeshenceVaultChain {
     };
     var payload = base64.encode(utf8.encode(jsonEncode(json)));
 
-    var url = Uri.parse('$onlineBankApiUrl/vault/${vault.id}/chain/${chain.name}/event');
-    var response = await vault.bank.authenticatedHttpPost(
+    var response = await vault.bank.internal.post(
       vault: vault,
-      url: url,
+      path: "/vault/${vault.id}/chain/${chain.name}/event",
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

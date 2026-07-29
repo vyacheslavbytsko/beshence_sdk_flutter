@@ -1,43 +1,18 @@
 import 'dart:convert';
 
-import 'package:beshence_sdk_flutter/src/misc.dart';
-import 'package:http/http.dart' as http;
+import 'package:beshence_sdk_flutter/src/models/internal/bank.dart';
 
 import '../../beshence_sdk_flutter.dart';
-import '../hive_objects/account_v1.dart';
-import '../hive_objects/bank_v1.dart';
 
 class BeshenceBank {
   final String id;
 
   BeshenceBank({required this.id});
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is BeshenceBank &&
-        other.id == id;
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  Future<String?> get onlineApiUrl async {
-    try {
-      return (await Beshence.pingBank(bankId: id)).apiUrl;
-    } catch(e) {
-      return null;
-    }
-  }
-
   Future<List<BeshenceRemoteVault>> getVaults() async {
     try {
-      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
-
-      var vaultsUrl = Uri.parse('$bankApiUrl/vaults');
-      var vaultsResponse = await authenticatedHttpGet(
-          url: vaultsUrl,
+      var vaultsResponse = await internal.get(
+          path: "/vaults",
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           }
@@ -62,11 +37,8 @@ class BeshenceBank {
 
   Future<String> createVault(String name) async {
     try {
-      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
-
-      var vaultUrl = Uri.parse('$bankApiUrl/vault');
-      var vaultResponse = await authenticatedHttpPost(
-          url: vaultUrl,
+      var vaultResponse = await internal.post(
+          path: "/vault",
           headers: <String, String>{
             'Content-Type': 'application/json; charset=UTF-8',
           },
@@ -91,10 +63,7 @@ class BeshenceBank {
 
   Future<String?> getAccountIdAttachedToVault(String vaultId) async {
     try {
-      String bankApiUrl = (await Beshence.pingBank(bankId: id)).apiUrl;
-
-      var chainsUrl = Uri.parse("$bankApiUrl/vault/$vaultId/chains");
-      var chainsResponse = await authenticatedHttpGet(url: chainsUrl);
+      var chainsResponse = await internal.get(path: "/vault/$vaultId/chains");
       var chainsJson = jsonDecode(chainsResponse.body);
       if(chainsJson["err"] == "0") {
         List<dynamic> chains = List<String>.from((chainsJson["chains"] as List)
@@ -104,8 +73,7 @@ class BeshenceBank {
         throw StateError('Request failed with err ${chainsJson["err"]} and error ${chainsJson["errmsg"]}.');
       }
 
-      var eventsUrl = Uri.parse("$bankApiUrl/vault/$vaultId/chain/main/events");
-      var eventsResponse = await authenticatedHttpGet(url: eventsUrl);
+      var eventsResponse = await internal.get(path: "/vault/$vaultId/chain/main/events");
       var eventsJson = jsonDecode(eventsResponse.body);
       if(eventsJson["err"] == "0") {
 
@@ -133,145 +101,18 @@ class BeshenceBank {
     }
   }
 
-  Future<http.Response> authenticatedHttpGet({
-    BeshenceVault? vault,
-    required Uri url,
-    Map<String, String>? headers
-  }) async {
-    BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
-    AccountV1? accountV1 = accountsV1Box.get(encodeKey(accountId: vault?.account.id));
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
 
-    String? accessToken = bankV1.accessToken;
-    String? refreshToken = bankV1.refreshToken;
-    String? oauthTokenId = accountV1?.oauthTokenId;
-
-    bool oauth = false;
-
-    if (oauthTokenId != null && vault != null) {
-      oauth = true;
-    } else if(accessToken == null || refreshToken == null) {
-      throw Exception("no authentication tokens");
-    }
-
-    Map<String, String> newHeaders = {};
-
-    if(headers != null) newHeaders.addAll(headers);
-    newHeaders["Authorization"] = "Bearer ${oauth ? "oauthv1_${vault!.id}_$oauthTokenId" : accessToken}";
-
-    try {
-      var response = await http.get(url, headers: newHeaders);
-      //print(response.body);
-      var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["err"] != "UNAUTHORIZED") return response;
-
-      if(!oauth) {
-        try {
-          var authUrl = Uri.parse('${await onlineApiUrl}/auth/refresh');
-          var response = await http.get(authUrl,
-              headers: <String, String>{
-                'Authorization': 'Bearer $refreshToken',
-                'Content-Type': 'application/json; charset=UTF-8',
-              }
-          );
-          var jsonResponse = jsonDecode(response.body);
-          if (jsonResponse["err"] == "0") {
-            if (jsonResponse is! Map<String, dynamic>) {
-              throw StateError('Invalid response format');
-            }
-            bankV1.accessToken = jsonResponse["access_token"];
-            bankV1.refreshToken = jsonResponse["refresh_token"];
-            await banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
-            return authenticatedHttpGet(
-                vault: vault,
-                url: url,
-                headers: headers);
-          } else {
-            throw StateError(
-                'Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-          }
-        } catch (e) {
-          rethrow;
-        }
-      } else {
-        throw StateError(
-            'Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
+    return other is BeshenceBank &&
+        other.id == id;
   }
 
-  Future<http.Response> authenticatedHttpPost({
-    BeshenceVault? vault,
-    required Uri url,
-    Map<String, String>? headers,
-    Object? body,
-    Encoding? encoding
-  }) async {
-    BankV1 bankV1 = banksV1Box.get(encodeKey(bankId: id))!;
-    AccountV1? accountV1 = accountsV1Box.get(encodeKey(accountId: vault?.account.id));
+  @override
+  int get hashCode => id.hashCode;
 
-    String? accessToken = bankV1.accessToken;
-    String? refreshToken = bankV1.refreshToken;
-    String? oauthTokenId = accountV1?.oauthTokenId;
-
-    bool oauth = false;
-
-    if (oauthTokenId != null && vault != null) {
-      oauth = true;
-    } else if(accessToken == null || refreshToken == null) {
-      throw Exception("no authentication tokens");
-    }
-
-    Map<String, String> newHeaders = {};
-
-    if(headers != null) newHeaders.addAll(headers);
-    newHeaders["Authorization"] = "Bearer ${oauth ? "oauthv1_${vault!.id}_$oauthTokenId" : accessToken}";
-
-    try {
-      var response = await http.post(url, headers: newHeaders, body: body, encoding: encoding);
-      //print(response.body);
-      var jsonResponse = jsonDecode(response.body);
-      if (jsonResponse["err"] != "UNAUTHORIZED") return response;
-
-      if(!oauth) {
-        try {
-          var authUrl = Uri.parse('${await onlineApiUrl}/auth/refresh');
-          var response = await http.get(authUrl,
-              headers: <String, String>{
-                'Authorization': 'Bearer $refreshToken',
-                'Content-Type': 'application/json; charset=UTF-8',
-              }
-          );
-          var jsonResponse = jsonDecode(response.body);
-          if (jsonResponse["err"] == "0") {
-            if (jsonResponse is! Map<String, dynamic>) {
-              throw StateError('Invalid response format');
-            }
-            bankV1.accessToken = jsonResponse["access_token"];
-            bankV1.refreshToken = jsonResponse["refresh_token"];
-            await banksV1Box.put(encodeKey(bankId: bankV1.id), bankV1);
-            return authenticatedHttpPost(
-                vault: vault,
-                url: url,
-                headers: headers,
-                body: body,
-                encoding: encoding);
-          } else {
-            throw StateError(
-                'Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-          }
-        } catch (e) {
-          rethrow;
-        }
-      } else {
-        throw StateError(
-            'Request failed with err ${jsonResponse["err"]} and error ${jsonResponse["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
+  BeshenceBankInternal get internal => BeshenceBankInternal(bank: this);
 }
 
 class BeshenceBankPingResponse {
