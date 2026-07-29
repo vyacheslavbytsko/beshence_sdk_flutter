@@ -17,6 +17,7 @@ import 'hive_objects/chain_v1.dart';
 import 'hive_objects/event_v1.dart';
 import 'hive_objects/vault_v1.dart';
 import 'misc.dart';
+import 'models/internal/bank.dart';
 
 class Beshence {
   static Future<void> init({BeshenceEventRegistry? registry}) async {
@@ -138,107 +139,177 @@ class Beshence {
   }
 
   static Future<BeshenceBankPingResponse> pingBank({required String bankId}) async {
-      List<String> bankApiUrls = await getBankApiUrls(bankId: bankId);
+    final bankApiUrls = await getBankApiUrls(bankId: bankId);
 
-      for (String bankApiUrl in bankApiUrls) {
-        try {
-          var bankUri = Uri.parse("$bankApiUrl/ping");
-          var bankResponse = await http.get(bankUri);
+    for (final bankApiUrl in bankApiUrls) {
+      try {
+        final response = await _bankRequest(
+          bankId: bankId,
+          apiUrl: bankApiUrl,
+          method: "GET",
+          path: "/ping",
+        );
 
-          var bankJson = jsonDecode(bankResponse.body);
+        final bankJson = jsonDecode(response.body);
 
-          if (bankJson is! Map<String, dynamic>) {
-            throw StateError('Invalid response format');
-          }
+        if (bankJson is! Map<String, dynamic>) {
+          continue;
+        }
 
-          if (bankJson['ping'] == 'beshence-bank-pong!') {
-            return BeshenceBankPingResponse(
-                bankId: bankJson["id"],
-                apiUrl: bankApiUrl,
-                registerMethods: List<String>.from(bankJson["auth"]["register"]["methods"]),
-                loginMethods: List<String>.from(bankJson["auth"]["login"]["methods"])
-            );
-          } else {
-            throw StateError('Unexpected ping response');
-          }
-        } catch (e) {}
+        if (bankJson["ping"] != "beshence-bank-pong!") {
+          continue;
+        }
+
+        return BeshenceBankPingResponse(
+          bankId: bankJson["id"],
+          apiUrl: bankApiUrl,
+          registerMethods:
+          List<String>.from(
+            bankJson["auth"]["register"]["methods"],
+          ),
+          loginMethods:
+          List<String>.from(
+            bankJson["auth"]["login"]["methods"],
+          ),
+        );
+      } catch (e) {
+        continue;
       }
+    }
 
-      throw StateError("cant access this bank");
-
+    throw StateError("cant access this bank",);
   }
 
-  static Future<void> loginToBank({required String bankId, required String username, required String password}) async {
-    try {
-      String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
+  static Future<void> loginToBank({
+    required String bankId,
+    required String username,
+    required String password,
+  }) async {
+    final bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
 
-      var loginUrl = Uri.parse('$bankApiUrl/auth/login');
-      var loginResponse = await http.post(loginUrl,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode({
-            'username': username,
-            'password': password
-          })
+    final response = await _bankRequest(
+      bankId: bankId,
+      apiUrl: bankApiUrl,
+      method: "POST",
+      path: "/auth/login",
+      headers: {
+        "Content-Type":
+        "application/json; charset=UTF-8",
+      },
+      body: jsonEncode({
+        "username": username,
+        "password": password,
+      }),
+    );
+
+    final loginJson =
+    jsonDecode(response.body);
+
+    if(loginJson["err"] != "0") {
+      throw StateError(
+        'Request failed with err '
+            '${loginJson["err"]} and error '
+            '${loginJson["errmsg"]}.',
       );
-      var loginJson = jsonDecode(loginResponse.body);
-      if (loginJson["err"] == "0") {
-        if (loginJson is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
+    }
 
-        if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
-          final BankV1 newBank = BankV1(
-              id: bankId,
-              apiUrls: await getBankApiUrls(bankId: bankId),
-              accessToken: loginJson["access_token"],
-              refreshToken: loginJson["refresh_token"]
-          );
-          await banksV1Box.put(encodeKey(bankId: bankId), newBank);
-        }
-      } else {
-        throw StateError('Request failed with err ${loginJson["err"]} and error ${loginJson["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
+    if(loginJson is! Map<String,dynamic>) {
+      throw StateError(
+        "Invalid response format",
+      );
+    }
+
+    if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
+      final bank = BankV1(
+        id: bankId,
+        apiUrls: await getBankApiUrls(bankId: bankId),
+        accessToken: loginJson["access_token"],
+        refreshToken: loginJson["refresh_token"],
+      );
+
+      await banksV1Box.put(
+        encodeKey(bankId: bankId),
+        bank,
+      );
     }
   }
 
-  static Future<void> registerInBank({required String bankId, required String username, required String password}) async {
-    try {
-      String bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
+  static Future<void> registerInBank({
+    required String bankId,
+    required String username,
+    required String password,
+  }) async {
+    final bankApiUrl = (await pingBank(bankId: bankId)).apiUrl;
 
-      var loginUrl = Uri.parse('$bankApiUrl/auth/register');
-      var loginResponse = await http.post(loginUrl,
-          headers: <String, String>{
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          body: jsonEncode({
-            'username': username,
-            'password': password
-          })
+    final response = await _bankRequest(
+      bankId: bankId,
+      apiUrl: bankApiUrl,
+      method: "POST",
+      path: "/auth/register",
+      headers: {
+        "Content-Type":
+        "application/json; charset=UTF-8",
+      },
+      body: jsonEncode({
+        "username": username,
+        "password": password,
+      }),
+    );
+
+    final json = jsonDecode(response.body);
+
+    if(json["err"] != "0") {
+      throw StateError(
+        'Request failed with err '
+            '${json["err"]} and error '
+            '${json["errmsg"]}.',
       );
-      var loginJson = jsonDecode(loginResponse.body);
-      if (loginJson["err"] == "0") {
-        if (loginJson is! Map<String, dynamic>) {
-          throw StateError('Invalid response format');
-        }
+    }
 
-        if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
-          final BankV1 newBank = BankV1(
-              id: bankId,
-              apiUrls: await getBankApiUrls(bankId: bankId),
-              accessToken: loginJson["access_token"],
-              refreshToken: loginJson["refresh_token"]
-          );
-          await banksV1Box.put(encodeKey(bankId: bankId), newBank);
-        }
-      } else {
-        throw StateError('Request failed with err ${loginJson["err"]} and error ${loginJson["errmsg"]}.');
-      }
-    } catch (e) {
-      rethrow;
+    if(json is! Map<String,dynamic>) {
+      throw StateError("Invalid response format",);
+    }
+
+    if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
+      final bank = BankV1(
+        id: bankId,
+        apiUrls: await getBankApiUrls(bankId: bankId),
+        accessToken: json["access_token"],
+        refreshToken: json["refresh_token"],
+      );
+
+      await banksV1Box.put(encodeKey(bankId: bankId), bank);
+    }
+  }
+
+  static Future<http.Response> _bankRequest({
+    required String bankId,
+    required String apiUrl,
+    required String method,
+    required String path,
+    Map<String, String>? headers,
+    String? body,
+  }) async {
+    if (apiUrl.startsWith("gateway://")) {
+      final connection = await BBIPeerConnection.getFor(bankId);
+
+      return connection.request(
+        method: method,
+        path: path,
+        headers: headers,
+        body: body,
+      );
+    }
+
+    final uri = Uri.parse("$apiUrl$path");
+
+    switch(method) {
+      case "GET":
+        return http.get(uri, headers: headers);
+      case "POST":
+        return http.post(uri, headers: headers, body: body);
+      default:
+        throw UnsupportedError("Unsupported method $method",);
     }
   }
 
