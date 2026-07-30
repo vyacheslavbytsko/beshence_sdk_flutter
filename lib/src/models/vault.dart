@@ -28,10 +28,7 @@ class BeshenceVault {
   BeshenceVaultChain chain(BeshenceChain chain) => BeshenceVaultChain(vault: this, chain: chain);
 
   Future<List<BeshenceVaultChain>> get chains async {
-    String bankApiUrl = (await Beshence.pingBank(bankId: bank.id)).apiUrl;
-
-    var chainsUrl = Uri.parse("$bankApiUrl/vault/$id/chains");
-    var chainsResponse = await bank.authenticatedHttpGet(vault: this, url: chainsUrl);
+    var chainsResponse = await bank.internal.get(vault: this, path: "/vault/$id/chains");
     var chainsJson = jsonDecode(chainsResponse.body);
     if(chainsJson["err"] == "0") {
       List<BeshenceVaultChain> chains = List<BeshenceVaultChain>.from((chainsJson["chains"] as List)
