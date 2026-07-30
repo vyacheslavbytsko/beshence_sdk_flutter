@@ -118,7 +118,15 @@ class BeshenceAccount {
     return (await requireChain("tokens")).addEvent(IssueTokenV1Event(tokenId: tokenId, scope: scope));
   }
 
-  Widget avatar(BuildContext context, double radius) {
+  Widget avatarButton({required BuildContext context, VoidCallback? onPressed}) {
+    return IconButton(
+        padding: .all(4.0),
+        icon: avatar(context: context, radius: 16.0),
+        onPressed: onPressed
+    );
+  }
+
+  Widget avatar({required BuildContext context, required double radius}) {
     final colorScheme = Theme.of(context).colorScheme;
     bool isBackgroundDark = ThemeData.estimateBrightnessForColor(_avatarColor) == Brightness.dark;
     return CircleAvatar(
@@ -128,12 +136,13 @@ class BeshenceAccount {
         color: Colors.white,
         fontWeight: FontWeight.bold,
       )),*/
-      child: Icon(
-          Icons.person,
-        color: isBackgroundDark
-            ? colorScheme.surfaceContainerLowest
-            : colorScheme.surfaceContainerHighest,
-      )
+        child: Icon(
+          Icons.person_outlined,
+          size: radius+8,
+          color: isBackgroundDark
+              ? colorScheme.surfaceContainerLowest
+              : colorScheme.surfaceContainerHighest,
+        )
     );
   }
 
