@@ -127,8 +127,16 @@ class BeshenceAccount {
   }
 
   Widget avatar({required BuildContext context, required double radius}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    bool isBackgroundDark = ThemeData.estimateBrightnessForColor(_avatarColor) == Brightness.dark;
+    final theme = Theme.of(context);
+    final isSystemDark = theme.brightness == Brightness.dark;
+
+    final Color iconColor = Color.alphaBlend(
+      isSystemDark
+          ? Colors.black.withValues(alpha: 0.75)
+          : Colors.white.withValues(alpha: 0.85),
+      _avatarColor,
+    );
+
     return CircleAvatar(
       radius: radius,
       foregroundColor: Colors.transparent,
@@ -140,9 +148,7 @@ class BeshenceAccount {
         child: Icon(
           Icons.person_outlined,
           size: radius+8,
-          color: isBackgroundDark
-              ? colorScheme.surfaceContainerLowest
-              : colorScheme.surfaceContainerHighest,
+          color: iconColor,
         )
     );
   }
@@ -179,7 +185,7 @@ class BeshenceAccount {
 
     // Fix saturation at 0.65 (vibrant but not eye-straining)
     // Fix value/brightness at 0.85 (bright enough for dark icons/text)
-    return HSVColor.fromAHSV(1.0, hue, 0.65, 0.85).toColor();
+    return HSVColor.fromAHSV(1.0, hue, 0.45, 1).toColor();
   }
 }
 
