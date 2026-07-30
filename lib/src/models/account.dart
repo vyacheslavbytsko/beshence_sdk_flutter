@@ -2,6 +2,7 @@ import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/issue_token_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/chain_v1.dart';
+import 'package:flutter/material.dart';
 
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/vault_v1.dart';
@@ -115,6 +116,49 @@ class BeshenceAccount {
 
   Future<String> issueToken({required String tokenId, required String scope}) async {
     return (await requireChain("tokens")).addEvent(IssueTokenV1Event(tokenId: tokenId, scope: scope));
+  }
+
+  Widget avatar(BuildContext context, double radius) {
+    final colorScheme = Theme.of(context).colorScheme;
+    bool isBackgroundDark = ThemeData.estimateBrightnessForColor(_avatarColor) == Brightness.dark;
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: _avatarColor,
+      /*child: Text(_initials, style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      )),*/
+      child: Icon(
+          Icons.person,
+        color: isBackgroundDark
+            ? colorScheme.surfaceContainerLowest
+            : colorScheme.surfaceContainerHighest,
+      )
+    );
+  }
+
+  /*String get _initials {
+    if (name == null || name!.trim().isEmpty) {
+      return id.characters.first.toUpperCase();
+    }
+
+    final parts = name!
+        .trim()
+        .split(RegExp(r'\s+'));
+
+    if (parts.length == 1) {
+      return parts.first.characters.first.toUpperCase();
+    }
+
+    return (
+        parts[0].characters.first +
+            parts[1].characters.first
+    ).toUpperCase();
+  }*/
+
+  Color get _avatarColor {
+    final hash = id.codeUnits.fold<int>(0, (a, b) => a * 31 + b);
+    return HSVColor.fromAHSV(1, (hash.abs() % 360).toDouble(), 0.55, 0.85).toColor();
   }
 }
 
