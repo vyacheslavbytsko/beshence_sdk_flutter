@@ -131,6 +131,7 @@ class BeshenceAccount {
     bool isBackgroundDark = ThemeData.estimateBrightnessForColor(_avatarColor) == Brightness.dark;
     return CircleAvatar(
       radius: radius,
+      foregroundColor: Colors.transparent,
       backgroundColor: _avatarColor,
       /*child: Text(_initials, style: const TextStyle(
         color: Colors.white,
@@ -166,8 +167,19 @@ class BeshenceAccount {
   }*/
 
   Color get _avatarColor {
-    final hash = id.codeUnits.fold<int>(0, (a, b) => a * 31 + b);
-    return HSVColor.fromAHSV(1, (hash.abs() % 360).toDouble(), 0.55, 0.85).toColor();
+    // Safe 32-bit string hashing, identical across all platforms (Web, Mobile, Desktop)
+    int hash = 0;
+    for (int i = 0; i < id.length; i++) {
+      // Mask with 0xFFFFFFFF to force 32-bit integer operations and prevent JS overflow in Web
+      hash = (31 * hash + id.codeUnitAt(i)) & 0xFFFFFFFF;
+    }
+
+    // Get a stable hue value between 0.0 and 360.0
+    final double hue = (hash.abs() % 360).toDouble();
+
+    // Fix saturation at 0.65 (vibrant but not eye-straining)
+    // Fix value/brightness at 0.85 (bright enough for dark icons/text)
+    return HSVColor.fromAHSV(1.0, hue, 0.65, 0.85).toColor();
   }
 }
 
