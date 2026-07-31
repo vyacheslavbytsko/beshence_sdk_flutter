@@ -120,7 +120,6 @@ class BeshenceAccount {
 
   Widget avatarButton({required BuildContext context, VoidCallback? onPressed}) {
     return IconButton(
-        padding: .all(4.0),
         icon: avatar(context: context, radius: 16.0),
         onPressed: onPressed
     );
