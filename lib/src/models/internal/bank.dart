@@ -310,7 +310,14 @@ class BBIPeerConnection {
       }
     };
 
-    final offer = await _peerConnection!.createOffer();
+    final offer = await _peerConnection!.createOffer({
+      'mandatory': {
+        'OfferToReceiveAudio': false,
+        'OfferToReceiveVideo': false,
+      },
+      'optional': []
+    });
+
     await _peerConnection!.setLocalDescription(offer);
 
     sendSignaling(SignalingMessage(
