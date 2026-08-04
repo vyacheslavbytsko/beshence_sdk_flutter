@@ -285,7 +285,9 @@ class BBIPeerConnection {
 
     // Create WebRTC connection
 
-    _peerConnection = await createPeerConnection({});
+    _peerConnection = await createPeerConnection({'iceServers': [
+      {'urls': ['stun:stun.l.google.com:19302']}
+    ]});
     _dataChannel = await _peerConnection!.createDataChannel("main", RTCDataChannelInit());
 
     _dataChannel!.onMessage = (message) => handleMessage(message);
