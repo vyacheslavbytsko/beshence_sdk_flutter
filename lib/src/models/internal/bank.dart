@@ -41,7 +41,11 @@ class BeshenceBankInternal {
     }
 
     if(onlineApiUrl == null) {
-      await updateOnlineApiUrl();
+      await updateOnlineApiUrl().timeout(const Duration(seconds: 60));
+    }
+
+    if (onlineApiUrl == null) {
+      throw StateError("Bank is offline");
     }
 
     final (newHeaders, oauth, refreshToken) = tokenize(vault: vault, headers: headers);
@@ -62,7 +66,7 @@ class BeshenceBankInternal {
       throw StateError("OAuth token expired");
     }
 
-    await refreshTokenFlow(refreshToken);
+    await refreshTokens(refreshToken);
 
     return get(
       vault: vault,
@@ -84,7 +88,11 @@ class BeshenceBankInternal {
     }
 
     if(onlineApiUrl == null) {
-      await updateOnlineApiUrl();
+      await updateOnlineApiUrl().timeout(const Duration(seconds: 60));
+    }
+
+    if (onlineApiUrl == null) {
+      throw StateError("Bank is offline");
     }
 
     final (newHeaders, oauth, refreshToken) = tokenize(vault: vault, headers: headers);
@@ -106,7 +114,7 @@ class BeshenceBankInternal {
       throw StateError("OAuth token expired");
     }
 
-    await refreshTokenFlow(refreshToken);
+    await refreshTokens(refreshToken);
 
     return post(
       vault: vault,
@@ -141,7 +149,7 @@ class BeshenceBankInternal {
     return (newHeaders, oauth, refreshToken);
   }
 
-  Future<void> refreshTokenFlow(String? refreshToken) async {
+  Future<void> refreshTokens(String? refreshToken) async {
     if (refreshToken == null) {
       throw StateError("No refresh token available");
     }
@@ -288,6 +296,32 @@ class BBIPeerConnection {
     _peerConnection = await createPeerConnection({'iceServers': [
       {'urls': ['stun:stun.l.google.com:19302']}
     ]});
+
+    _peerConnection!.onIceCandidate = (candidate) {
+      sendSignaling(SignalingMessage(
+          type: SignalingType.iceCandidate,
+          candidate: candidate.candidate,
+          sdpMid: candidate.sdpMid,
+          sdpmLineIndex: candidate.sdpMLineIndex
+      ));
+    };
+
+    _peerConnection!.onConnectionState = (state) {
+      switch(state) {
+        case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
+        case RTCPeerConnectionState.RTCPeerConnectionStateClosed:
+        case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+          _state = BBIPeerConnectionState.dead;
+          break;
+        case RTCPeerConnectionState.RTCPeerConnectionStateNew:
+          break;
+        case RTCPeerConnectionState.RTCPeerConnectionStateConnecting:
+          break;
+        case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+          break;
+      }
+    };
+
     _dataChannel = await _peerConnection!.createDataChannel("main", RTCDataChannelInit());
 
     _dataChannel!.onMessage = (message) => handleMessage(message);
@@ -321,18 +355,9 @@ class BBIPeerConnection {
     await _peerConnection!.setLocalDescription(offer);
 
     sendSignaling(SignalingMessage(
-        type: SignalingType.offer,
-        sdp: (await _peerConnection!.getLocalDescription())!.sdp,
+      type: SignalingType.offer,
+      sdp: (await _peerConnection!.getLocalDescription())!.sdp,
     ));
-
-    _peerConnection!.onIceCandidate = (candidate) {
-      sendSignaling(SignalingMessage(
-          type: SignalingType.iceCandidate,
-          candidate: candidate.candidate,
-          sdpMid: candidate.sdpMid,
-          sdpmLineIndex: candidate.sdpMLineIndex
-      ));
-    };
   }
 
   void sendSignaling(SignalingMessage message) {
