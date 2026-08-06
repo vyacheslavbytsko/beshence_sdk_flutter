@@ -172,9 +172,7 @@ class BeshenceAccountChooserTile extends StatelessWidget {
                 Wrap(
                   children: [
                     if(leading != null) IconTheme(
-                        data: const IconThemeData(
-                          size: 20,
-                        ),
+                        data: Theme.of(context).iconTheme.copyWith(size: 20),
                         child: leading!,
                     ),
                     if(leading != null) SizedBox(width: 12,),
