@@ -6,3 +6,4 @@ export 'src/models/vault.dart';
 export 'src/models/event.dart';
 export 'src/models/chain.dart';
 export 'src/models/vault_chain.dart';
+export 'src/widgets/main.dart';
