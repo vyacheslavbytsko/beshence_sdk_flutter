@@ -57,7 +57,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                                 mainAxisAlignment: .spaceBetween,
                                 children: [
                                   Beshence.selectedAccount!.avatar(radius: 20),
-                                  Text("Hello, User!", style: TextStyle(fontSize: 24, height: 1), textAlign: .center,),
+                                  Text("Hello, User!", style: Theme.of(context).textTheme.titleLarge, textAlign: .center,),
                                   IconButton(
                                       icon: Icon(Icons.close),
                                       style: IconButton.styleFrom(
