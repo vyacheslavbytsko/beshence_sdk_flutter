@@ -18,8 +18,9 @@ class BeshenceAccountChooserModal extends StatelessWidget {
 
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
-      minChildSize: 0.1,
+      minChildSize: 0.0,
       expand: false,
+      snap: true,
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
@@ -34,7 +35,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 14.0),
+                        padding: const EdgeInsets.only(top: 16.0),
                         child: SizedBox(
                           width: 32,
                           height: 4,
@@ -47,7 +48,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                          padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24, top: 14),
+                          padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: .start,
                             mainAxisSize: MainAxisSize.min,
@@ -56,14 +57,25 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                                 mainAxisSize: .max,
                                 mainAxisAlignment: .spaceBetween,
                                 children: [
-                                  Beshence.selectedAccount!.avatar(radius: 20),
-                                  Text("Hello, User!", style: Theme.of(context).textTheme.titleLarge, textAlign: .center,),
                                   IconButton(
-                                      icon: Icon(Icons.close),
+                                      icon: Icon(Icons.arrow_back),
+                                      constraints: BoxConstraints(),
                                       style: IconButton.styleFrom(
-                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        padding: .all(8),
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       ),
-                                      onPressed: () => Navigator.pop(context))
+                                      onPressed: () => Navigator.pop(context)),
+                                  SizedBox(width: 12,),
+                                  Wrap(
+                                    crossAxisAlignment: .center,
+                                    children: [
+                                      Beshence.selectedAccount!.avatar(radius: 12),
+                                      SizedBox(width: 8,),
+                                      Text("Hello, User!", style: Theme.of(context).textTheme.titleLarge?.copyWith(height: 1.0), textAlign: .center,),
+                                    ],
+                                  ),
+                                  SizedBox(width: 12,),
+                                  SizedBox(width: 40), // the same as IconButton
                                 ],
                               ),
                               SizedBox(height: 16.0,),
