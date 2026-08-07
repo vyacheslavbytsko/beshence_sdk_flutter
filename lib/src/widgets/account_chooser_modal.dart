@@ -4,7 +4,10 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../beshence_sdk_flutter.dart';
 
 Color buttonsBackgroundColor(BuildContext context) => Theme.of(context).colorScheme.brightness == Brightness.dark
-    ? Colors.black : Colors.white;
+    ? Colors.black : ElevationOverlay.applySurfaceTint(
+    Theme.of(context).colorScheme.surface,
+    Theme.of(context).colorScheme.surfaceTint,
+    3);
 
 class BeshenceAccountChooserModal extends StatelessWidget {
   final List<Widget> children;
@@ -13,9 +16,6 @@ class BeshenceAccountChooserModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final modalBackgroundColor = Theme.of(context).colorScheme.brightness == Brightness.dark
-        ? Theme.of(context).colorScheme.surface : Theme.of(context).colorScheme.surfaceVariant; // surfaceContainerHighest doesn't work!!!
-
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.0,
@@ -24,7 +24,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: modalBackgroundColor,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: SingleChildScrollView(
@@ -35,7 +35,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
+                        padding: const EdgeInsets.only(top: 8.0),
                         child: SizedBox(
                           width: 32,
                           height: 4,
@@ -48,7 +48,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(24),
                           child: Column(
                             crossAxisAlignment: .start,
                             mainAxisSize: MainAxisSize.min,
