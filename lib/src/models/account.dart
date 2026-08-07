@@ -85,7 +85,7 @@ class BeshenceAccount {
     if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
       final BankV1 bankV1 = BankV1(
           id: bankId,
-          apiUrls: [],
+          //apiUrls: [],
           accessToken: null,
           refreshToken: null);
       await banksV1Box.put(encodeKey(bankId: bankId), bankV1);

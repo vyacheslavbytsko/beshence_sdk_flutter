@@ -18,7 +18,6 @@ class BankV1Adapter extends TypeAdapter<BankV1> {
     };
     return BankV1(
       id: fields[0] as String,
-      apiUrls: (fields[1] as List).cast<String>(),
       accessToken: fields[2] as String?,
       refreshToken: fields[3] as String?,
     );
@@ -27,11 +26,9 @@ class BankV1Adapter extends TypeAdapter<BankV1> {
   @override
   void write(BinaryWriter writer, BankV1 obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.id)
-      ..writeByte(1)
-      ..write(obj.apiUrls)
       ..writeByte(2)
       ..write(obj.accessToken)
       ..writeByte(3)

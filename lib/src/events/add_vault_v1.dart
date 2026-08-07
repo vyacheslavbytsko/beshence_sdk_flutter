@@ -28,7 +28,7 @@ class AddVaultV1EventSpec implements BeshenceEventSpec<AddVaultV1Event> {
     if(!banksV1Box.containsKey(encodeKey(bankId: event.bankId))) {
       BankV1 bankV1 = BankV1(
           id: event.bankId,
-          apiUrls: [],
+          //apiUrls: [],
           accessToken: null,
           refreshToken: null
       );
