@@ -282,51 +282,51 @@ class BBIPeerConnection {
     final wsUri = Uri.parse('wss://gateway.beshence.com:443/api/bank/$bankId/ws?role=client&session_id=$sessionId');
     _websocket = WebSocketChannel.connect(wsUri);
     _websocket.stream.listen((message) async {
-        //print("got message! $message");
-        final json = jsonDecode(message);
+      //print("got message! $message");
+      final json = jsonDecode(message);
 
-        if(json["type"] == "server_hello_v1") {
-          String ciphertextB64 = json["ct"];
+      if(json["type"] == "server_hello_v1") {
+        String ciphertextB64 = json["ct"];
 
-          // TODO: check signature of ciphertext. String signatureB64 = json["sig"];
-          // for this, we should publicate bank's ML-DSA public keys to Beshence Gateway.
-          // also we should assign IDs for these keys.
-          // as of now, we trust Beshence Gateway.
+        // TODO: check signature of ciphertext. String signatureB64 = json["sig"];
+        // for this, we should publicate bank's ML-DSA public keys to Beshence Gateway.
+        // also we should assign IDs for these keys.
+        // as of now, we trust Beshence Gateway.
 
-          final sharedSecret = PqcKem.kyber1024.decapsulate(_decapsulationKey,
-              Uint8List.fromList(rawBase64UrlDecode(ciphertextB64)));
+        final sharedSecret = PqcKem.kyber1024.decapsulate(_decapsulationKey,
+            Uint8List.fromList(rawBase64UrlDecode(ciphertextB64)));
 
-          final hkdf = Hkdf(
-            hmac: Hmac.sha256(),
-            outputLength: 32,
-          );
+        final hkdf = Hkdf(
+          hmac: Hmac.sha256(),
+          outputLength: 32,
+        );
 
-          final sessionKey = await hkdf.deriveKey(
-            secretKey: SecretKey(sharedSecret),
-            info: utf8.encode(
-              'BESHENCE-BANK-SIGNALING-SESSION-KEY-V1',
-            ),
-          );
+        final sessionKey = await hkdf.deriveKey(
+          secretKey: SecretKey(sharedSecret),
+          info: utf8.encode(
+            'BESHENCE-BANK-SIGNALING-SESSION-KEY-V1',
+          ),
+        );
 
-          _c2bKey = await hkdf.deriveKey(
-            secretKey: sessionKey,
-            info: utf8.encode(
-              'BESHENCE-BANK-SIGNALING-C2B-KEY-V1',
-            ),
-          );
+        _c2bKey = await hkdf.deriveKey(
+          secretKey: sessionKey,
+          info: utf8.encode(
+            'BESHENCE-BANK-SIGNALING-C2B-KEY-V1',
+          ),
+        );
 
-          _b2cKey = await hkdf.deriveKey(
-            secretKey: sessionKey,
-            info: utf8.encode(
-              'BESHENCE-BANK-SIGNALING-B2C-KEY-V1',
-            ),
-          );
+        _b2cKey = await hkdf.deriveKey(
+          secretKey: sessionKey,
+          info: utf8.encode(
+            'BESHENCE-BANK-SIGNALING-B2C-KEY-V1',
+          ),
+        );
 
-          await createWebRtcConnection();
-        } else if(json["type"] == "encrypted_v1") {
-          await handleSignaling(await decryptSignaling(json));
-        } // else ignore
-      },
+        await createWebRtcConnection();
+      } else if(json["type"] == "encrypted_v1") {
+        await handleSignaling(await decryptSignaling(json));
+      } // else ignore
+    },
       cancelOnError: true,
       onDone: () async {
         //print('Bank ${bank.id} disconnected');
@@ -432,19 +432,18 @@ class BBIPeerConnection {
     );
 
     return jsonEncode({
-      "type": "ciphertext_v1",
+      "type": "encrypted_v1",
       "ct": rawBase64UrlEncode(box.cipherText),
       "nonce": rawBase64UrlEncode(box.nonce),
       "mac": rawBase64UrlEncode(box.mac.bytes)
     });
   }
 
-  Future<SignalingMessage> decryptSignaling(String message) async {
-    Map<String, dynamic> messageJson = jsonDecode(message);
+  Future<SignalingMessage> decryptSignaling(Map<String, dynamic> message) async {
     final cipher = Chacha20.poly1305Aead();
-    final Uint8List nonce = Uint8List.fromList(rawBase64UrlDecode(messageJson["nonce"]));
-    final mac = Mac(rawBase64UrlDecode(messageJson["mac"]));
-    final ciphertext = rawBase64UrlDecode(messageJson["ct"]);
+    final Uint8List nonce = Uint8List.fromList(rawBase64UrlDecode(message["nonce"]));
+    final mac = Mac(rawBase64UrlDecode(message["mac"]));
+    final ciphertext = rawBase64UrlDecode(message["ct"]);
 
     return SignalingMessage.fromJson(
         jsonDecode(utf8.decode(
