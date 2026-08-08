@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
+import 'package:pqcrypto/pqcrypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -245,6 +248,12 @@ class BBIPeerConnection {
   bool get isDataChannelOpen => _dataChannel?.state == RTCDataChannelState.RTCDataChannelOpen;
   BBIPeerConnectionState get state => _state;
 
+  late final Uint8List _encapsulationKey;
+  late final Uint8List _decapsulationKey;
+
+  late final SecretKeyData _b2cKey;
+  late final SecretKeyData _c2bKey;
+
   BBIPeerConnection._internal({required this.bankId});
 
   static Future<BBIPeerConnection> getFor(String bankId) async {
@@ -267,14 +276,58 @@ class BBIPeerConnection {
     // create WebSocket connection
 
     final String sessionId = Uuid().v4();
+    var (encapsulationKey, decapsulationKey) = PqcKem.kyber1024.generateKeyPair();
+    _encapsulationKey = encapsulationKey; _decapsulationKey = decapsulationKey;
+
     final wsUri = Uri.parse('wss://gateway.beshence.com:443/api/bank/$bankId/ws?role=client&session_id=$sessionId');
     _websocket = WebSocketChannel.connect(wsUri);
     _websocket.stream.listen((message) async {
-      //print("got message! $message");
-      final json = jsonDecode(message);
-      final signal = SignalingMessage.fromJson(json);
-      await handleSignaling(signal);
-    },
+        //print("got message! $message");
+        final json = jsonDecode(message);
+
+        if(json["type"] == "server_hello_v1") {
+          String ciphertextB64 = json["ct"];
+
+          // TODO: check signature of ciphertext. String signatureB64 = json["sig"];
+          // for this, we should publicate bank's ML-DSA public keys to Beshence Gateway.
+          // also we should assign IDs for these keys.
+          // as of now, we trust Beshence Gateway.
+
+          final sharedSecret = PqcKem.kyber1024.decapsulate(_decapsulationKey,
+              Uint8List.fromList(rawBase64UrlDecode(ciphertextB64)));
+
+          final hkdf = Hkdf(
+            hmac: Hmac.sha256(),
+            outputLength: 32,
+          );
+
+          final sessionKey = await hkdf.deriveKey(
+            secretKey: SecretKey(sharedSecret),
+            info: utf8.encode(
+              'BESHENCE-BANK-SIGNALING-SESSION-KEY-V1',
+            ),
+          );
+
+          _c2bKey = await hkdf.deriveKey(
+            secretKey: sessionKey,
+            info: utf8.encode(
+              'BESHENCE-BANK-SIGNALING-C2B-KEY-V1',
+            ),
+          );
+
+          _b2cKey = await hkdf.deriveKey(
+            secretKey: sessionKey,
+            info: utf8.encode(
+              'BESHENCE-BANK-SIGNALING-B2C-KEY-V1',
+            ),
+          );
+
+          await createWebRtcConnection();
+        } else if(json["type"] == "encrypted_v1") {
+          final decrypted = json; // TODO: decrypt
+          await handleSignaling(SignalingMessage.fromJson(decrypted));
+        } // else ignore
+      },
       cancelOnError: true,
       onDone: () async {
         //print('Bank ${bank.id} disconnected');
@@ -289,16 +342,22 @@ class BBIPeerConnection {
         //await connection?.close();
       },
     );
+
     await _websocket.ready;
 
-    // Create WebRTC connection
+    sendWebSocket(jsonEncode({
+      "type": "client_hello_v1",
+      "ek": rawBase64UrlEncode(_encapsulationKey)
+    }));
+  }
 
+  Future<void> createWebRtcConnection() async {
     _peerConnection = await createPeerConnection({'iceServers': [
       {'urls': ['stun:stun.l.google.com:19302']}
     ]});
 
     _peerConnection!.onIceCandidate = (candidate) {
-      sendSignaling(SignalingMessage(
+      encryptAndSendSignaling(SignalingMessage(
           type: SignalingType.iceCandidate,
           candidate: candidate.candidate,
           sdpMid: candidate.sdpMid,
@@ -354,14 +413,90 @@ class BBIPeerConnection {
 
     await _peerConnection!.setLocalDescription(offer);
 
-    sendSignaling(SignalingMessage(
+    encryptAndSendSignaling(SignalingMessage(
       type: SignalingType.offer,
       sdp: (await _peerConnection!.getLocalDescription())!.sdp,
     ));
   }
 
-  void sendSignaling(SignalingMessage message) {
-    _websocket.sink.add(jsonEncode(message.toJson()));
+  /*
+  Future<List<int>> encryptJSON(
+      SecretKey key,
+      Map<String, dynamic> json,
+      ) async {
+
+    final cipher = Chacha20.poly1305Aead();
+
+
+    final plaintext = utf8.encode(
+      jsonEncode(json),
+    );
+
+
+    final box = await cipher.encrypt(
+      plaintext,
+      secretKey: key,
+    );
+
+
+    return [
+      ...box.nonce,
+      ...box.cipherText,
+      ...box.mac.bytes,
+    ];
+  }
+
+  Future<Map<String,dynamic>> decryptJSON(
+      SecretKey key,
+      List<int> packet,
+      ) async {
+
+    final cipher = Chacha20.poly1305Aead();
+
+
+    final nonce = packet.sublist(
+      0,
+      12,
+    );
+
+
+    final mac = Mac(
+      packet.sublist(
+        packet.length - 16,
+      ),
+    );
+
+
+    final ciphertext = packet.sublist(
+      12,
+      packet.length - 16,
+    );
+
+
+    final clear = await cipher.decrypt(
+      SecretBox(
+        ciphertext,
+        nonce: nonce,
+        mac: mac,
+      ),
+      secretKey: key,
+    );
+
+
+    return jsonDecode(
+      utf8.decode(clear),
+    );
+  }
+  */
+
+  void encryptAndSendSignaling(SignalingMessage message) {
+    // TODO: encrypt before sending
+
+    sendWebSocket(jsonEncode(message.toJson()));
+  }
+
+  void sendWebSocket(dynamic message) {
+    _websocket.sink.add(message);
   }
 
   Future<void> handleSignaling(SignalingMessage message) async {
@@ -397,7 +532,7 @@ class BBIPeerConnection {
           "method": method,
           "path": path,
           "headers": headers,
-          "body": body != null ? rawBase64UrlEncode(body) : null,
+          "body": body != null ? rawBase64UrlEncode(utf8.encode(body)) : null,
         })
     ));
 
@@ -412,7 +547,7 @@ class BBIPeerConnection {
 
     completer.complete(
         http.Response(
-            rawBase64UrlDecode(json["body"]),
+            utf8.decode(rawBase64UrlDecode(json["body"])),
             json["status"],
             headers: {
               "content-type": "application/json"
