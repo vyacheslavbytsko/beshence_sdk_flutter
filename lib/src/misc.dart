@@ -333,19 +333,18 @@ int _intToBase32(int value) {
 }
 
 /// Encodes a raw string to URL-Safe Base64 without trailing '=' padding.
-String rawBase64UrlEncode(String input) {
-  List<int> bytes = utf8.encode(input);
+String rawBase64UrlEncode(List<int> bytes) {
   String encoded = base64Url.encode(bytes);
   return encoded.replaceAll('=', '');
 }
 
 /// Decodes an unpadded URL-Safe Base64 string back to its original text.
-String rawBase64UrlDecode(String input) {
+List<int> rawBase64UrlDecode(String input) {
   int remainder = input.length % 4;
   if (remainder > 0) {
     input += '=' * (4 - remainder);
   }
 
   List<int> decodedBytes = base64Url.decode(input);
-  return utf8.decode(decodedBytes);
+  return decodedBytes;
 }
