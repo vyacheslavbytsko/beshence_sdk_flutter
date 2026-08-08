@@ -222,7 +222,6 @@ class Beshence {
     if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
       final bank = BankV1(
         id: bankId,
-        //apiUrls: await getBankApiUrls(bankId: bankId),
         accessToken: loginJson["access_token"],
         refreshToken: loginJson["refresh_token"],
       );
@@ -273,7 +272,6 @@ class Beshence {
     if(!banksV1Box.containsKey(encodeKey(bankId: bankId))) {
       final bank = BankV1(
         id: bankId,
-        //apiUrls: await getBankApiUrls(bankId: bankId),
         accessToken: json["access_token"],
         refreshToken: json["refresh_token"],
       );
