@@ -285,7 +285,7 @@ class BBIPeerConnection {
       //print("got message! $message");
       final json = jsonDecode(message);
 
-      if(json["type"] == "server_hello_v1") {
+      if(json["type"] == "sh_v1") {
         String ciphertextB64 = json["ct"];
 
         // TODO: check signature of ciphertext. String signatureB64 = json["sig"];
@@ -323,7 +323,7 @@ class BBIPeerConnection {
         );
 
         await createWebRtcConnection();
-      } else if(json["type"] == "encrypted_v1") {
+      } else if(json["type"] == "ct_v1") {
         await handleSignaling(await decryptSignaling(json));
       } // else ignore
     },
@@ -345,7 +345,7 @@ class BBIPeerConnection {
     await _websocket.ready;
 
     sendWebSocket(jsonEncode({
-      "type": "client_hello_v1",
+      "type": "ch_v1",
       "ek": rawBase64UrlEncode(_encapsulationKey)
     }));
   }
@@ -432,7 +432,7 @@ class BBIPeerConnection {
     );
 
     return jsonEncode({
-      "type": "encrypted_v1",
+      "type": "ct_v1",
       "ct": rawBase64UrlEncode(box.cipherText),
       "nonce": rawBase64UrlEncode(box.nonce),
       "mac": rawBase64UrlEncode(box.mac.bytes)
