@@ -324,8 +324,7 @@ class BBIPeerConnection {
 
           await createWebRtcConnection();
         } else if(json["type"] == "encrypted_v1") {
-          final decrypted = json; // TODO: decrypt
-          await handleSignaling(SignalingMessage.fromJson(decrypted));
+          await handleSignaling(await decryptSignaling(json));
         } // else ignore
       },
       cancelOnError: true,
@@ -356,13 +355,15 @@ class BBIPeerConnection {
       {'urls': ['stun:stun.l.google.com:19302']}
     ]});
 
-    _peerConnection!.onIceCandidate = (candidate) {
-      encryptAndSendSignaling(SignalingMessage(
+    _peerConnection!.onIceCandidate = (candidate) async {
+      String encryptedSignaling = await encryptSignaling(SignalingMessage(
           type: SignalingType.iceCandidate,
           candidate: candidate.candidate,
           sdpMid: candidate.sdpMid,
           sdpmLineIndex: candidate.sdpMLineIndex
       ));
+
+      sendWebSocket(encryptedSignaling);
     };
 
     _peerConnection!.onConnectionState = (state) {
@@ -413,86 +414,50 @@ class BBIPeerConnection {
 
     await _peerConnection!.setLocalDescription(offer);
 
-    encryptAndSendSignaling(SignalingMessage(
+    String encryptedOffer = await encryptSignaling(SignalingMessage(
       type: SignalingType.offer,
       sdp: (await _peerConnection!.getLocalDescription())!.sdp,
     ));
+
+    sendWebSocket(encryptedOffer);
   }
 
-  /*
-  Future<List<int>> encryptJSON(
-      SecretKey key,
-      Map<String, dynamic> json,
-      ) async {
-
+  Future<String> encryptSignaling(SignalingMessage message) async {
     final cipher = Chacha20.poly1305Aead();
-
-
-    final plaintext = utf8.encode(
-      jsonEncode(json),
-    );
-
+    final plaintext = utf8.encode(jsonEncode(message.toJson()));
 
     final box = await cipher.encrypt(
       plaintext,
-      secretKey: key,
+      secretKey: _c2bKey,
     );
 
-
-    return [
-      ...box.nonce,
-      ...box.cipherText,
-      ...box.mac.bytes,
-    ];
+    return jsonEncode({
+      "type": "ciphertext_v1",
+      "ct": rawBase64UrlEncode(box.cipherText),
+      "nonce": rawBase64UrlEncode(box.nonce),
+      "mac": rawBase64UrlEncode(box.mac.bytes)
+    });
   }
 
-  Future<Map<String,dynamic>> decryptJSON(
-      SecretKey key,
-      List<int> packet,
-      ) async {
-
+  Future<SignalingMessage> decryptSignaling(String message) async {
+    Map<String, dynamic> messageJson = jsonDecode(message);
     final cipher = Chacha20.poly1305Aead();
+    final Uint8List nonce = Uint8List.fromList(rawBase64UrlDecode(messageJson["nonce"]));
+    final mac = Mac(rawBase64UrlDecode(messageJson["mac"]));
+    final ciphertext = rawBase64UrlDecode(messageJson["ct"]);
 
-
-    final nonce = packet.sublist(
-      0,
-      12,
+    return SignalingMessage.fromJson(
+        jsonDecode(utf8.decode(
+            await cipher.decrypt(
+              SecretBox(
+                ciphertext,
+                nonce: nonce,
+                mac: mac,
+              ),
+              secretKey: _b2cKey,
+            )
+        ))
     );
-
-
-    final mac = Mac(
-      packet.sublist(
-        packet.length - 16,
-      ),
-    );
-
-
-    final ciphertext = packet.sublist(
-      12,
-      packet.length - 16,
-    );
-
-
-    final clear = await cipher.decrypt(
-      SecretBox(
-        ciphertext,
-        nonce: nonce,
-        mac: mac,
-      ),
-      secretKey: key,
-    );
-
-
-    return jsonDecode(
-      utf8.decode(clear),
-    );
-  }
-  */
-
-  void encryptAndSendSignaling(SignalingMessage message) {
-    // TODO: encrypt before sending
-
-    sendWebSocket(jsonEncode(message.toJson()));
   }
 
   void sendWebSocket(dynamic message) {
