@@ -115,6 +115,17 @@ class BeshenceBank {
   BeshenceBankInternal get internal => BeshenceBankInternal(bank: this);
 }
 
+class BeshenceBankPKResponseV1 {
+  final String rootPk;
+  final String leafPk;
+  final String leafSig;
+
+  BeshenceBankPKResponseV1({
+    required this.rootPk,
+    required this.leafPk,
+    required this.leafSig});
+}
+
 class BeshenceBankPingResponse {
   final String bankId;
   final String apiUrl;
