@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:base32/base32.dart';
+import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
@@ -101,10 +103,10 @@ class BeshenceBankInternal {
     final (newHeaders, oauth, refreshToken) = tokenize(vault: vault, headers: headers);
 
     final response = await _request(
-      method: "POST",
-      path: path,
-      headers: newHeaders,
-      body: body
+        method: "POST",
+        path: path,
+        headers: newHeaders,
+        body: body
     );
 
     final jsonResponse = jsonDecode(response.body);
@@ -286,15 +288,82 @@ class BBIPeerConnection {
       final json = jsonDecode(message);
 
       if(json["type"] == "sh_v1") {
-        String ciphertextB64 = json["ct"];
+        BeshenceBankPKResponseV1 pks = await Beshence.getBankPublicKeysV1(bankId: bankId);
 
-        // TODO: check signature of ciphertext. String signatureB64 = json["sig"];
-        // for this, we should publicate bank's ML-DSA public keys to Beshence Gateway.
-        // also we should assign IDs for these keys.
-        // as of now, we trust Beshence Gateway.
+        Uint8List ciphertext = Uint8List.fromList(rawBase64UrlDecode(json["ct"]));
+        Uint8List contextSig = Uint8List.fromList(rawBase64UrlDecode(json["sig"]));
 
-        final sharedSecret = PqcKem.kyber1024.decapsulate(_decapsulationKey,
-            Uint8List.fromList(rawBase64UrlDecode(ciphertextB64)));
+        // check bank id
+
+        var domain = utf8.encode("BESHENCE-BANK-ID-V1");
+
+        final rootPk = Uint8List.fromList(rawBase64UrlDecode(pks.rootPk));
+
+        var message = Uint8List.fromList(<int>[
+          ...domain,
+          ...rootPk,
+        ]);
+
+        final hash = sha256.convert(message);
+
+        final encoded = base32.encode(Uint8List.fromList(hash.bytes));
+
+        final generatedBankId = encoded.replaceAll('=', '').toLowerCase();
+
+        if (generatedBankId != bankId) {
+          _state = BBIPeerConnectionState.dead;
+          return;
+        }
+
+        // check leaf pk
+
+        domain = utf8.encode("BESHENCE-BANK-MLDSA-KEY-V1",);
+
+        final leafPk = Uint8List.fromList(rawBase64UrlDecode(pks.leafPk));
+        final sig = Uint8List.fromList(rawBase64UrlDecode(pks.leafSig));
+
+        message = Uint8List.fromList(<int>[
+          ...domain,
+          ...leafPk,
+        ]);
+
+        var valid = SlhDsa.verify(
+            rootPk,
+            message,
+            sig,
+            SlhDsaParams.shake256s
+        );
+
+        if(!valid) {
+          _state = BBIPeerConnectionState.dead;
+          return;
+        }
+
+        // check encryption context
+
+        domain = utf8.encode(
+          "BESHENCE-BANK-SIGNALING-SIGN-CONTEXT-V1",
+        );
+
+        message = Uint8List.fromList([
+          ...domain,
+          ..._encapsulationKey,
+          ...ciphertext,
+        ]);
+
+        valid = MlDsa.verify(
+          leafPk,
+          message,
+          contextSig,
+          DilithiumParams.mlDsa87,
+        );
+
+        if(!valid) {
+          _state = BBIPeerConnectionState.dead;
+          return;
+        }
+
+        final sharedSecret = PqcKem.kyber1024.decapsulate(_decapsulationKey, ciphertext);
 
         final hkdf = Hkdf(
           hmac: Hmac.sha256(),
