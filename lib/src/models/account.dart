@@ -28,6 +28,16 @@ class BeshenceAccount {
 
   BeshenceAccountInternal get internal => BeshenceAccountInternal(account: this);
 
+  String? get name {
+    if(!initialized) throw Exception("Beshence not initialized");
+    return internal.hiveV1!.name;
+  }
+
+  Future<void> setName(String value) async {
+    if(!initialized) throw Exception("Beshence not initialized");
+    await internal.hiveV1!.update(name: name);
+  }
+
   Future<BeshenceChain> createChain(String name) async {
     if(!initialized) throw Exception("Beshence not initialized");
 

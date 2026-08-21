@@ -14,7 +14,7 @@ class AccountV1 extends HiveObject {
 
   AccountV1({required this.id, required this.oauthTokenId, this.name});
 
-  Future<void> set({
+  Future<void> update({
     String? id,
     String? oauthTokenId,
     String? name

@@ -14,7 +14,7 @@ class SetAccountNameV1EventSpec implements BeshenceEventSpec<SetAccountNameV1Eve
 
   @override
   FutureOr<bool> apply(SetAccountNameV1Event event) {
-    event.account!.internal.hiveV1!.set(name: event.name);
+    event.account!.internal.hiveV1!.update(name: event.name);
     return true;
   }
 
