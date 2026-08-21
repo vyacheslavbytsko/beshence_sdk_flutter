@@ -40,7 +40,7 @@ class BeshenceAccount {
     SetAccountNameV1Event event = SetAccountNameV1Event(name: value);
     (await requireChain("main")).addEvent(event);
 
-    await internal.hiveV1!.update(name: name);
+    await internal.hiveV1!.update(name: value);
   }
 
   Future<BeshenceChain> createChain(String name) async {
