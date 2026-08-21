@@ -40,7 +40,7 @@ class Beshence {
     eventsRegistry = registry ?? BeshenceEventRegistry();
     eventsRegistry.register<InitAccountEvent>(InitAccountEventSpec());
     eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventSpec());
-    eventsRegistry.register<ChangeVaultsPrioritiesV1Event>(ChangeVaultsPrioritiesV1EventSpec());
+    eventsRegistry.register<SetVaultsPrioritiesV1Event>(SetVaultsPrioritiesV1EventSpec());
     eventsRegistry.register<IssueTokenV1Event>(IssueTokenV1EventSpec());
 
     initialized = true;
