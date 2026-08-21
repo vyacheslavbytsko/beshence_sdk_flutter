@@ -11,7 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../hive_registrar.g.dart';
-import 'events/change_vaults_priorities_v1.dart';
+import 'events/set_vaults_priorities_v1.dart';
 import 'hive_objects/account_v1.dart';
 import 'hive_objects/chain_v1.dart';
 import 'hive_objects/event_v1.dart';
