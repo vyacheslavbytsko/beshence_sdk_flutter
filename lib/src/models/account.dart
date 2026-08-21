@@ -6,6 +6,7 @@ import 'package:beshence_sdk_flutter/src/widgets/avatar.dart';
 import 'package:flutter/material.dart';
 
 import '../../beshence_sdk_flutter.dart';
+import '../events/set_account_name_v1.dart';
 import '../hive_objects/vault_v1.dart';
 import '../misc.dart';
 import 'internal/account.dart';
@@ -35,6 +36,10 @@ class BeshenceAccount {
 
   Future<void> setName(String value) async {
     if(!initialized) throw Exception("Beshence not initialized");
+
+    SetAccountNameV1Event event = SetAccountNameV1Event(name: value);
+    (await requireChain("main")).addEvent(event);
+
     await internal.hiveV1!.update(name: name);
   }
 
