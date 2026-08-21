@@ -16,6 +16,12 @@ class BeshenceAccountChooserModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    BeshenceAccount account = Beshence.selectedAccount!;
+    String accountName = "User";
+    if(account.name != null && account.name != "") {
+      accountName = account.name!;
+    }
+
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.0,
@@ -71,7 +77,7 @@ class BeshenceAccountChooserModal extends StatelessWidget {
                                     children: [
                                       Beshence.selectedAccount!.avatar(radius: 12),
                                       SizedBox(width: 8,),
-                                      Text("Hello, User!", style: Theme.of(context).textTheme.titleLarge?.copyWith(height: 1.0), textAlign: .center,),
+                                      Text("Hello, $accountName!", style: Theme.of(context).textTheme.titleLarge?.copyWith(height: 1.0), textAlign: .center,),
                                     ],
                                   ),
                                   SizedBox(width: 12,),
