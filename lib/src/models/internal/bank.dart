@@ -7,7 +7,7 @@ import 'package:crypto/crypto.dart' hide Hmac;
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:http/http.dart' as http;
-import 'package:pqcrypto/pqcrypto.dart';
+import 'package:pqcrypto/pqcrypto.dart' hide sha256;
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
