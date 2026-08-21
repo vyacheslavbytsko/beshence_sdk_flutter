@@ -19,17 +19,20 @@ class AccountV1Adapter extends TypeAdapter<AccountV1> {
     return AccountV1(
       id: fields[0] as String,
       oauthTokenId: fields[1] as String?,
+      name: fields[2] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, AccountV1 obj) {
     writer
-      ..writeByte(2)
+      ..writeByte(3)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.oauthTokenId);
+      ..write(obj.oauthTokenId)
+      ..writeByte(2)
+      ..write(obj.name);
   }
 
   @override
