@@ -24,7 +24,7 @@ class AccountV1 extends HiveObject {
         oauthTokenId: oauthTokenId,
         name: name
     );
-    await accountsV1Box.put(encodeKey(accountId: id), newAccountV1);
+    await accountsV1Box.put(encodeKey(accountId: this.id), newAccountV1);
   }
 
   AccountV1 copyWith({
