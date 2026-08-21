@@ -4,6 +4,7 @@ import 'package:beshence_sdk_flutter/beshence_sdk_flutter.dart';
 import 'package:beshence_sdk_flutter/src/events/add_vault_v1.dart';
 import 'package:beshence_sdk_flutter/src/events/init_account.dart';
 import 'package:beshence_sdk_flutter/src/events/issue_token_v1.dart';
+import 'package:beshence_sdk_flutter/src/events/set_account_name_v1.dart';
 import 'package:beshence_sdk_flutter/src/hive_objects/bank_v1.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:http/http.dart' as http;
@@ -39,6 +40,7 @@ class Beshence {
 
     eventsRegistry = registry ?? BeshenceEventRegistry();
     eventsRegistry.register<InitAccountEvent>(InitAccountEventSpec());
+    eventsRegistry.register<SetAccountNameV1Event>(SetAccountNameV1EventSpec());
     eventsRegistry.register<AddVaultV1Event>(AddVaultV1EventSpec());
     eventsRegistry.register<SetVaultsPrioritiesV1Event>(SetVaultsPrioritiesV1EventSpec());
     eventsRegistry.register<IssueTokenV1Event>(IssueTokenV1EventSpec());
