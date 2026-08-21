@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../beshence_sdk_flutter.dart';
 import '../hive_objects/vault_v1.dart';
 import '../misc.dart';
+import 'internal/account.dart';
 
 class BeshenceAccount {
   final String id;
@@ -24,6 +25,8 @@ class BeshenceAccount {
 
   @override
   int get hashCode => id.hashCode;
+
+  BeshenceAccountInternal get internal => BeshenceAccountInternal(account: this);
 
   Future<BeshenceChain> createChain(String name) async {
     if(!initialized) throw Exception("Beshence not initialized");
